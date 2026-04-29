@@ -69,7 +69,7 @@ const INITIAL_DATA: FormData = {
 };
 
 const DURATION_PRICES: Record<string, number> = {
-  "1 month": 1,
+  "1 month": 4999,
   "45 days": 4999,
   "2 month": 4999,
 };
@@ -184,7 +184,7 @@ export default function App() {
               {/* Fallback to text if image fails */}
               {!LOGO_URL && <span>CS</span>}
             </div>
-            <span className="font-bold text-2xl tracking-tight text-neutral-800">CodeScaler</span>
+           <a href="https://www.codescaler.com/"><span className="font-bold text-2xl tracking-tight text-neutral-800">CodeScaler</span></a>
           </div>
 
           {/* Desktop Nav */}
