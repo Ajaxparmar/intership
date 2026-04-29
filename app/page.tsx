@@ -27,7 +27,7 @@ function cn(...inputs: ClassValue[]) {
 // Logo URL provided: https://www.codescaler.com/
 // I'll use a text-based logo with a professional icon if the live image fails or looks bad in a container.
 // But the user specifically asked to use the logo.
-const LOGO_URL = "https://www.codescaler.com/assets/images/logo.png"; // Guessed common path, but I'll fallback to text.
+const LOGO_URL = "https://www.codescaler.com/logo.png"; // Guessed common path, but I'll fallback to text.
 
 interface FormData {
   // Step 1
@@ -115,10 +115,10 @@ export default function App() {
       <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => setView("form")}>
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
-              CS
+            <div className="w-20 h-20 rounded-lg flex items-center justify-center text-white font-bold text-xl">
+             <img src={LOGO_URL} alt="CodeScaler Logo" className="w-20 h-20 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
             </div>
-            <span className="font-bold text-xl tracking-tight text-neutral-800">CodeScaler</span>
+            <span className="font-bold text-3xl tracking-tight text-neutral-800">CodeScaler</span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-neutral-500 font-medium">
             <button onClick={() => setView("roadmap")} className={cn("hover:text-blue-600 transition-colors cursor-pointer", view === "roadmap" && "text-blue-600 font-bold")}>Roadmap</button>
