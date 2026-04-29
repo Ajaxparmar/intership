@@ -55,7 +55,7 @@ const INITIAL_DATA: FormData = {
   name: "",
   fatherName: "",
   address: "",
-  gender: "Male",
+  gender: "", // Changed to empty to force selection
   phone: "",
   email: "",
   academicClass: "",
@@ -63,14 +63,14 @@ const INITIAL_DATA: FormData = {
   rollNo: "",
   collegeName: "",
   universityName: "",
-  duration: "1 month",
-  domain: "Full Stack Web Development",
+  duration: "", // Force selection
+  domain: "", // Force selection
 };
 
 const DURATION_PRICES: Record<string, number> = {
   "1 month": 3999,
   "45 days": 5000,
-  "2 month": 7500, // Added 2 month based on dropdown request
+  "2 month": 7500,
   "3 month": 12000,
   "6 month": 24999,
 };
@@ -126,23 +126,20 @@ export default function App() {
       if (!formData.rollNo.trim()) newErrors.rollNo = "Roll Number is required";
       if (!formData.collegeName.trim()) newErrors.collegeName = "College Name is required";
       if (!formData.universityName.trim()) newErrors.universityName = "University Name is required";
-      if (!formData.duration) newErrors.duration = "Please select duration";
-      if (!formData.domain) newErrors.domain = "Please select a domain";
+      if (!formData.duration || formData.duration === "") newErrors.duration = "Please select duration";
+      if (!formData.domain || formData.domain === "") newErrors.domain = "Please select a domain";
     }
 
     setErrors(newErrors);
     const isValid = Object.keys(newErrors).length === 0;
-    if (!isValid) {
-      // Small feedback for mobile users if they try to skip
-      const firstError = Object.values(newErrors)[0];
-      console.warn("Validation failed:", firstError);
-    }
+    
     return isValid;
   };
 
   const nextStep = () => {
     if (validateStep(step)) {
       setStep((s) => Math.min(s + 1, 3));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
@@ -788,6 +785,7 @@ function Select({ label, value, options, onChange, icon, error }: {
             icon && "pl-11"
           )}
         >
+          <option value="" disabled>Select {label}</option>
           {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
         </select>
         <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-400">
