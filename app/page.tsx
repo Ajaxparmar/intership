@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
@@ -143,6 +145,14 @@ export default function App() {
         ) : (
           <>
             <div className="text-center mb-12">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-bold border border-blue-100 mb-6"
+              >
+                <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+                Special Batch: Guru Jambheshwar University Students
+              </motion.div>
               <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-neutral-900">
                 Internship Program <span className="text-blue-600">2026</span>
               </h1>
@@ -275,7 +285,10 @@ export default function App() {
                           <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
                             <BookOpen size={20} />
                           </div>
-                          <h2 className="text-2xl font-bold">Academic Details</h2>
+                          <div className="flex flex-col">
+                            <h2 className="text-2xl font-bold">Academic Details</h2>
+                            <p className="text-xs text-blue-600 font-bold uppercase tracking-wider">Priority Admission for GJU Students</p>
+                          </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <Input label="Class/Degree" placeholder="B.Tech" value={formData.academicClass} onChange={(v) => updateField("academicClass", v)} icon={<GraduationCap size={18} />} />
