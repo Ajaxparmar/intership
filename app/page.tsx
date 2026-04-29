@@ -3,13 +3,14 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { QRCodeSVG } from "qrcode.react";
-import { 
-  User, 
-  BookOpen, 
-  CreditCard, 
-  ChevronRight, 
-  ChevronLeft, 
-  CheckCircle2, 
+
+import {
+  User,
+  BookOpen,
+  CreditCard,
+  ChevronRight,
+  ChevronLeft,
+  CheckCircle2,
   ArrowRight,
   Phone,
   Mail,
@@ -31,7 +32,7 @@ function cn(...inputs: ClassValue[]) {
 // Logo URL provided: https://www.codescaler.com/
 // I'll use a text-based logo with a professional icon if the live image fails or looks bad in a container.
 // But the user specifically asked to use the logo.
-const LOGO_URL = "https://www.codescaler.com/assets/images/logo.png"; // Guessed common path, but I'll fallback to text.
+const LOGO_URL = "https://www.codescaler.com/logo.png"; // Guessed common path, but I'll fallback to text.
 
 interface FormData {
   // Step 1
@@ -68,11 +69,9 @@ const INITIAL_DATA: FormData = {
 };
 
 const DURATION_PRICES: Record<string, number> = {
-  "1 month": 3999,
-  "45 days": 5000,
-  "2 month": 7500,
-  "3 month": 12000,
-  "6 month": 24999,
+  "1 month": 1,
+  "45 days": 4999,
+  "2 month": 4999,
 };
 
 export default function App() {
@@ -132,7 +131,7 @@ export default function App() {
 
     setErrors(newErrors);
     const isValid = Object.keys(newErrors).length === 0;
-    
+
     return isValid;
   };
 
@@ -177,18 +176,37 @@ export default function App() {
       <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => setView("form")}>
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
-              CS
+            <div className="w-15 h-15  rounded-lg flex items-center justify-center text-white font-bold text-xl">
+              {/* add logo.png  */}
+              <img src={LOGO_URL} alt="CodeScaler Logo" className="w-20 h-20 object-contain" onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }} />
+              {/* Fallback to text if image fails */}
+              {!LOGO_URL && <span>CS</span>}
             </div>
-            <span className="font-bold text-xl tracking-tight text-neutral-800">CodeScaler</span>
+            <span className="font-bold text-2xl tracking-tight text-neutral-800">CodeScaler</span>
           </div>
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8 text-neutral-500 font-medium">
             <button onClick={() => setView("roadmap")} className={cn("hover:text-blue-600 transition-colors cursor-pointer", view === "roadmap" && "text-blue-600 font-bold")}>Roadmap</button>
             <button onClick={() => setView("form")} className={cn("hover:text-blue-600 transition-colors cursor-pointer", view === "form" && "text-blue-600 font-bold")}>Internship</button>
-            <button 
-              onClick={() => setView("contact")} 
+
+            {/* add a button to donwload the pdf file */}
+            <button onClick={() => {
+              // Create a temporary link to trigger the download
+              const link = document.createElement("a");
+              link.href = "CodeScaler_Industrial_Training_Curriculum.pdf"; // Assuming the PDF is placed in the public folder
+              link.download = "CodeScaler_Industrial_Training_Curriculum.pdf";
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            }}>Download</button>
+
+
+
+            <button
+              onClick={() => setView("contact")}
               className={cn(
                 "px-5 py-2 rounded-full transition-all font-bold",
                 view === "contact" ? "bg-blue-600 text-white" : "bg-neutral-900 text-white hover:bg-neutral-800"
@@ -199,7 +217,7 @@ export default function App() {
           </div>
 
           {/* Mobile Menu Toggle */}
-          <button 
+          <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="md:hidden p-2 text-neutral-600 hover:bg-neutral-100 rounded-xl transition-colors"
           >
@@ -217,8 +235,8 @@ export default function App() {
               className="md:hidden border-t border-neutral-100 bg-white overflow-hidden"
             >
               <div className="px-4 py-6 flex flex-col gap-4">
-                <button 
-                  onClick={() => setView("roadmap")} 
+                <button
+                  onClick={() => setView("roadmap")}
                   className={cn(
                     "w-full py-4 px-6 rounded-2xl text-left font-bold transition-all",
                     view === "roadmap" ? "bg-blue-50 text-blue-600" : "text-neutral-500 hover:bg-neutral-50"
@@ -226,8 +244,8 @@ export default function App() {
                 >
                   Internship Roadmap
                 </button>
-                <button 
-                  onClick={() => setView("form")} 
+                <button
+                  onClick={() => setView("form")}
                   className={cn(
                     "w-full py-4 px-6 rounded-2xl text-left font-bold transition-all",
                     view === "form" ? "bg-blue-50 text-blue-600" : "text-neutral-500 hover:bg-neutral-50"
@@ -235,8 +253,8 @@ export default function App() {
                 >
                   Application Form
                 </button>
-                <button 
-                  onClick={() => setView("contact")} 
+                <button
+                  onClick={() => setView("contact")}
                   className="w-full py-4 px-6 bg-neutral-900 text-white rounded-2xl font-bold hover:bg-neutral-800 transition-all text-center"
                 >
                   Contact Our Team
@@ -256,7 +274,7 @@ export default function App() {
         ) : (
           <>
             <div className="text-center mb-12">
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-bold border border-blue-100 mb-6"
@@ -279,12 +297,12 @@ export default function App() {
                 <div className="flex justify-between w-full max-w-xs bg-neutral-50 px-4">
                   {[1, 2, 3].map((s) => (
                     <div key={s} className="flex flex-col items-center gap-2 group">
-                      <div 
+                      <div
                         className={cn(
                           "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 border-2",
-                          step === s ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200 scale-110" : 
-                          step > s ? "bg-green-500 border-green-500 text-white" : 
-                          "bg-white border-neutral-300 text-neutral-400"
+                          step === s ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200 scale-110" :
+                            step > s ? "bg-green-500 border-green-500 text-white" :
+                              "bg-white border-neutral-300 text-neutral-400"
                         )}
                       >
                         {step > s ? <CheckCircle2 size={18} /> : s}
@@ -305,7 +323,7 @@ export default function App() {
             <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-neutral-100 overflow-hidden relative">
               <AnimatePresence mode="wait">
                 {isSubmitted ? (
-                  <motion.div 
+                  <motion.div
                     key="success"
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -327,7 +345,7 @@ export default function App() {
                               <span className="text-neutral-600">Internship Program</span>
                               <span className="font-bold">₹{price}</span>
                             </div>
-                            <button 
+                            <button
                               onClick={() => {
                                 setIsPaymentModalOpen(true);
                                 setShowQRCode(true);
@@ -339,13 +357,16 @@ export default function App() {
                             </button>
                           </>
                         ) : (
-                          <motion.div 
+                          <motion.div
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             className="flex flex-col items-center"
                           >
                             <div className="bg-white p-4 rounded-2xl shadow-inner mb-6 border border-neutral-100">
-                                <QRCodeSVG value={`upi://pay?pa=codescaler@okaxis&pn=CodeScaler&am=${price}&cu=INR`} size={200} />
+                              <QRCodeSVG
+                                value={`upi://pay?pa=q566002417@ybl&pn=CodeScaler&am=${price}&cu=INR&tn=Payment`}
+                                size={220}
+                              />
                             </div>
                             <div className="text-center space-y-4">
                               <p className="font-bold text-neutral-800">Scan QR to Pay: ₹{price}</p>
@@ -354,34 +375,36 @@ export default function App() {
                                   ⚠️ MANDATORY STEP:
                                 </p>
                                 <p className="text-sm text-amber-700 mt-1 leading-relaxed decoration-amber-300">
-                                  After payment, share your payment screenshot to <span className="font-black text-amber-900 underline">7201000220</span> on WhatsApp for confirmation.
+                                  After payment, share your payment screenshot to <span className="font-black text-amber-900 underline">8572892552</span> on WhatsApp for confirmation.
                                 </p>
+                                <a
+                                  href="https://wa.me/918572892552"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="mt-4 block py-3 px-4 bg-green-500 hover:bg-green-600 rounded-xl font-black text-center text-lg tracking-tight transition-all"
+                                >
+                                  Share Payment Screenshot
+                                </a>
                               </div>
                               <div className="flex gap-2">
-                                <button 
+                                <button
                                   onClick={() => setShowQRCode(false)}
                                   className="flex-1 py-3 text-sm font-bold text-neutral-500 hover:text-neutral-800"
                                 >
                                   Go Back
                                 </button>
-                                <a 
-                                  href="https://rzp.io/l/codescaler-internship" 
-                                  target="_blank"
-                                  className="flex-1 py-3 text-sm font-bold text-blue-600 hover:text-blue-800"
-                                >
-                                  Pay via Link
-                                </a>
+
                               </div>
                             </div>
                           </motion.div>
                         )}
                       </div>
-                      <button 
+                      <button
                         onClick={() => {
-                            setStep(1);
-                            setFormData(INITIAL_DATA);
-                            setIsSubmitted(false);
-                            setShowQRCode(false);
+                          setStep(1);
+                          setFormData(INITIAL_DATA);
+                          setIsSubmitted(false);
+                          setShowQRCode(false);
                         }}
                         className="text-neutral-400 text-sm hover:text-neutral-600 transition-colors mt-4"
                       >
@@ -452,7 +475,7 @@ export default function App() {
                           </div>
                           <div className="flex flex-col">
                             <h2 className="text-2xl font-bold">Academic Details</h2>
-                            <p className="text-xs text-blue-600 font-bold uppercase tracking-wider">Priority Admission for GJU Students</p>
+                            <p className="text-xs text-blue-600 font-bold uppercase tracking-wider">Admission for GJU Students</p>
                           </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -463,19 +486,19 @@ export default function App() {
                           <div className="md:col-span-2">
                             <Input label="University Name" placeholder="State University" value={formData.universityName} onChange={(v) => updateField("universityName", v)} icon={<Building2 size={18} />} error={errors.universityName} />
                           </div>
-                          
-                          <Select 
-                            label="Internship Duration" 
-                            value={formData.duration} 
-                            options={["1 month", "45 days", "2 month", "3 month", "6 month"]} 
-                            onChange={(v) => updateField("duration", v)} 
+
+                          <Select
+                            label="Internship Duration"
+                            value={formData.duration}
+                            options={["1 month", "45 days", "2 month", "3 month", "6 month"]}
+                            onChange={(v) => updateField("duration", v)}
                             error={errors.duration}
                           />
-                          <Select 
-                            label="Selected Domain" 
-                            value={formData.domain} 
-                            options={["Data Analyst Development", "Full Stack Web Development", "Frontend Web Development", "Backend Web Development"]} 
-                            onChange={(v) => updateField("domain", v)} 
+                          <Select
+                            label="Selected Domain"
+                            value={formData.domain}
+                            options={["Data Analyst", "FullStack Development", "Frontend Development", "Backend Development"]}
+                            onChange={(v) => updateField("domain", v)}
                             icon={<Briefcase size={18} />}
                             error={errors.domain}
                           />
@@ -491,7 +514,7 @@ export default function App() {
                           </div>
                           <h2 className="text-2xl font-bold">Review & Payment</h2>
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                           <div className="space-y-4">
                             <h3 className="text-sm font-bold uppercase tracking-wider text-neutral-400">Application Summary</h3>
@@ -502,7 +525,7 @@ export default function App() {
                               <SummaryItem label="College" value={formData.collegeName} />
                             </div>
                           </div>
-                          
+
                           <div className="bg-neutral-900 text-white rounded-3xl p-8 relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/20 blur-3xl rounded-full" />
                             <h3 className="text-blue-400 font-bold text-sm mb-6 uppercase tracking-widest">Pricing Details</h3>
@@ -539,7 +562,7 @@ export default function App() {
                         <ChevronLeft size={20} />
                         Back
                       </button>
-                      
+
                       {step < 3 ? (
                         <button
                           onClick={nextStep}
@@ -568,11 +591,16 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="py-12 border-t border-neutral-200 mt-20">
+      <footer className="py-8 border-t border-neutral-200 mt-20">
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex items-center gap-2 grayscale brightness-0">
-             <div className="w-8 h-8 bg-neutral-800 rounded-lg flex items-center justify-center text-white font-bold text-lg">CS</div>
-             <span className="font-bold text-lg tracking-tight">CodeScaler</span>
+
+            <img src={LOGO_URL} alt="CodeScaler Logo" className="w-20 h-20 object-contain" onError={(e) => {
+              (e.target as HTMLImageElement).style.display = "none";
+            }} />
+            {/* Fallback to text if image fails */}
+            {!LOGO_URL && <span>CS</span>}
+            <span className="font-bold text-2xl tracking-tight text-neutral-800">CodeScaler</span>
           </div>
           <p className="text-neutral-400 text-sm">© 2026 CodeScaler. All rights reserved. Designed for excellence.</p>
           <div className="flex gap-6">
@@ -586,20 +614,20 @@ export default function App() {
       <AnimatePresence>
         {isPaymentModalOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm"
               onClick={() => setIsPaymentModalOpen(false)}
             />
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl shadow-neutral-900/20 overflow-hidden"
             >
-              <button 
+              <button
                 onClick={() => setIsPaymentModalOpen(false)}
                 className="absolute top-6 right-6 p-2 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded-full transition-all"
               >
@@ -616,19 +644,19 @@ export default function App() {
                     <p className="text-neutral-500 mb-8 max-w-sm mx-auto">
                       Your application for <b>{formData.domain}</b> is ready. Submit the internship fee to confirm your seat.
                     </p>
-                    
+
                     <div className="bg-neutral-50 rounded-2xl p-6 mb-8 border border-neutral-100 text-left">
-                       <div className="flex justify-between items-center mb-3 text-sm text-neutral-500">
-                          <span>Internship Duration</span>
-                          <span className="font-bold text-neutral-700">{formData.duration}</span>
-                       </div>
-                       <div className="flex justify-between items-center text-lg font-bold">
-                          <span>Processing Fee</span>
-                          <span className="text-blue-600">₹{price}</span>
-                       </div>
+                      <div className="flex justify-between items-center mb-3 text-sm text-neutral-500">
+                        <span>Internship Duration</span>
+                        <span className="font-bold text-neutral-700">{formData.duration}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-lg font-bold">
+                        <span>Processing Fee</span>
+                        <span className="text-blue-600">₹{price}</span>
+                      </div>
                     </div>
 
-                    <button 
+                    <button
                       onClick={() => setShowQRCode(true)}
                       className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 active:scale-[0.98] flex items-center justify-center gap-3"
                     >
@@ -638,7 +666,7 @@ export default function App() {
                     <p className="mt-6 text-xs text-neutral-400 font-medium">Securely processed via CodeScaler Finance Team</p>
                   </div>
                 ) : (
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     className="flex flex-col items-center"
@@ -647,12 +675,15 @@ export default function App() {
                       <div className="w-1.5 h-1.5 rounded-full bg-green-600 animate-pulse" />
                       Scan to Pay
                     </div>
-                    
+
                     <div className="bg-white p-6 rounded-[2rem] shadow-2xl border border-neutral-100 mb-8 relative group">
-                        <div className="absolute inset-0 bg-blue-500/5 blur-3xl rounded-full scale-75 group-hover:scale-100 transition-transform duration-700" />
-                        <div className="relative">
-                          <QRCodeSVG value={`upi://pay?pa=codescaler@okaxis&pn=CodeScaler&am=${price}&cu=INR`} size={220} />
-                        </div>
+                      <div className="absolute inset-0 bg-blue-500/5 blur-3xl rounded-full scale-75 group-hover:scale-100 transition-transform duration-700" />
+                      <div className="relative">
+                        <QRCodeSVG
+                          value={`upi://pay?pa=q566002417@ybl&pn=CodeScaler&am=${price}&cu=INR&tn=Payment`}
+                          size={220}
+                        />
+                      </div>
                     </div>
 
                     <div className="text-center space-y-6 w-full">
@@ -664,32 +695,31 @@ export default function App() {
                       <div className="p-6 bg-blue-600 rounded-3xl text-white shadow-xl shadow-blue-900/20 text-left relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 blur-2xl rounded-full translate-x-1/2 -translate-y-1/2" />
                         <p className="text-sm font-black uppercase tracking-widest mb-3 opacity-80 flex items-center gap-2">
-                           <CheckCircle2 size={16} />
-                           Mandatory Step
+                          <CheckCircle2 size={16} />
+                          Mandatory Step
                         </p>
                         <p className="text-sm font-medium leading-relaxed">
                           After successful payment, please share your <span className="font-black underline underline-offset-4 text-white">Payment Screenshot</span> to this number:
                         </p>
-                        <div className="mt-4 py-3 px-4 bg-white/10 rounded-xl font-black text-center text-xl tracking-tighter">
-                          7201000220
-                        </div>
+                        <a
+                          href="https://wa.me/918572892552"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-4 block py-3 px-4 bg-green-500 hover:bg-green-600 rounded-xl font-black text-center text-lg tracking-tight transition-all"
+                        >
+                          Share Payment Screenshot
+                        </a>
                         <p className="text-[10px] text-white/60 mt-3 font-bold uppercase tracking-widest text-center italic">WhatsApp Only Support</p>
                       </div>
 
                       <div className="flex gap-4">
-                        <button 
+                        <button
                           onClick={() => setShowQRCode(false)}
                           className="flex-1 py-4 text-sm font-bold text-neutral-400 hover:text-neutral-900 transition-colors"
                         >
                           Go Back
                         </button>
-                        <a 
-                          href="https://rzp.io/l/codescaler-internship" 
-                          target="_blank"
-                          className="flex-1 py-4 text-sm font-black text-blue-600 hover:text-blue-800 transition-colors border border-blue-100 rounded-2xl"
-                        >
-                          Pay via Link
-                        </a>
+
                       </div>
                     </div>
                   </motion.div>
@@ -703,9 +733,9 @@ export default function App() {
   );
 }
 
-function Input({ label, value, onChange, placeholder, type = "text", icon, error }: { 
-  label: string; 
-  value: string; 
+function Input({ label, value, onChange, placeholder, type = "text", icon, error }: {
+  label: string;
+  value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   type?: string;
@@ -732,7 +762,7 @@ function Input({ label, value, onChange, placeholder, type = "text", icon, error
             {icon}
           </div>
         )}
-        <input 
+        <input
           type={type}
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -768,7 +798,7 @@ function Select({ label, value, options, onChange, icon, error }: {
         {error && <span className="text-[10px] font-bold text-red-500 uppercase tracking-tighter">{error}</span>}
       </div>
       <div className="relative">
-         {icon && (
+        {icon && (
           <div className={cn(
             "absolute left-4 top-1/2 -translate-y-1/2 transition-colors",
             error ? "text-red-400" : "text-neutral-400"
@@ -776,7 +806,7 @@ function Select({ label, value, options, onChange, icon, error }: {
             {icon}
           </div>
         )}
-        <select 
+        <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className={cn(
@@ -807,7 +837,7 @@ function SummaryItem({ label, value }: { label: string; value: string }) {
 
 function ContactView() {
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="max-w-4xl mx-auto"
@@ -831,8 +861,8 @@ function ContactView() {
                   Shiv Colony, Jind, Haryana 126102
                 </p>
                 <div className="mt-4 flex items-center gap-2 text-blue-600 font-bold text-sm">
-                   <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-                   Get there: 2 mins from city center
+                  <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+                  Get there: 2 mins from city center
                 </div>
               </div>
             </div>
@@ -937,7 +967,7 @@ function RoadmapView() {
   ];
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="space-y-16"
@@ -991,22 +1021,22 @@ function RoadmapView() {
             </div>
           </div>
           <div className="md:w-1/2 grid grid-cols-2 gap-4">
-             <div className="aspect-square bg-white/5 rounded-2xl border border-white/10 flex flex-col items-center justify-center p-6 text-center">
-                <span className="text-3xl font-bold text-blue-400 mb-2">10+</span>
-                <span className="text-xs text-neutral-500">Live Projects</span>
-             </div>
-             <div className="aspect-square bg-white/5 rounded-2xl border border-white/10 flex flex-col items-center justify-center p-6 text-center">
-                <span className="text-3xl font-bold text-purple-400 mb-2">24/7</span>
-                <span className="text-xs text-neutral-500">Mentor Support</span>
-             </div>
-             <div className="aspect-square bg-white/5 rounded-2xl border border-white/10 flex flex-col items-center justify-center p-6 text-center">
-                <span className="text-3xl font-bold text-green-400 mb-2">100%</span>
-                <span className="text-xs text-neutral-500">Practical Work</span>
-             </div>
-             <div className="aspect-square bg-white/5 rounded-2xl border border-white/10 flex flex-col items-center justify-center p-6 text-center">
-                <span className="text-3xl font-bold text-orange-400 mb-2">Daily</span>
-                <span className="text-xs text-neutral-500">Assessments</span>
-             </div>
+            <div className="aspect-square bg-white/5 rounded-2xl border border-white/10 flex flex-col items-center justify-center p-6 text-center">
+              <span className="text-3xl font-bold text-blue-400 mb-2">10+</span>
+              <span className="text-xs text-neutral-500">Live Projects</span>
+            </div>
+            <div className="aspect-square bg-white/5 rounded-2xl border border-white/10 flex flex-col items-center justify-center p-6 text-center">
+              <span className="text-3xl font-bold text-purple-400 mb-2">24/7</span>
+              <span className="text-xs text-neutral-500">Mentor Support</span>
+            </div>
+            <div className="aspect-square bg-white/5 rounded-2xl border border-white/10 flex flex-col items-center justify-center p-6 text-center">
+              <span className="text-3xl font-bold text-green-400 mb-2">100%</span>
+              <span className="text-xs text-neutral-500">Practical Work</span>
+            </div>
+            <div className="aspect-square bg-white/5 rounded-2xl border border-white/10 flex flex-col items-center justify-center p-6 text-center">
+              <span className="text-3xl font-bold text-orange-400 mb-2">Daily</span>
+              <span className="text-xs text-neutral-500">Assessments</span>
+            </div>
           </div>
         </div>
       </div>
