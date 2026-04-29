@@ -84,6 +84,7 @@ export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showQRCode, setShowQRCode] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
 
   useEffect(() => {
     setIsMenuOpen(false);
@@ -93,12 +94,55 @@ export default function App() {
 
   const updateField = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
   };
 
-  const nextStep = () => setStep((s) => Math.min(s + 1, 3));
+  const validateStep = (s: number) => {
+    const newErrors: Partial<Record<keyof FormData, string>> = {};
+    if (s === 1) {
+      if (!formData.name.trim()) newErrors.name = "Full Name is required";
+      if (!formData.fatherName.trim()) newErrors.fatherName = "Father's Name is required";
+      if (!formData.address.trim()) newErrors.address = "Address is required";
+      if (!formData.phone.trim()) {
+        newErrors.phone = "Phone Number is required";
+      } else if (!/^\d{10}$/.test(formData.phone.replace(/[^0-9]/g, ""))) {
+        newErrors.phone = "Invalid Phone Number (10 digits required)";
+      }
+      if (!formData.email.trim()) {
+        newErrors.email = "Email is required";
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        newErrors.email = "Invalid Email Address";
+      }
+    } else if (s === 2) {
+      if (!formData.academicClass.trim()) newErrors.academicClass = "Degree/Class is required";
+      if (!formData.yearSemester.trim()) newErrors.yearSemester = "Year/Semester is required";
+      if (!formData.rollNo.trim()) newErrors.rollNo = "Roll Number is required";
+      if (!formData.collegeName.trim()) newErrors.collegeName = "College Name is required";
+      if (!formData.universityName.trim()) newErrors.universityName = "University Name is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const nextStep = () => {
+    if (validateStep(step)) {
+      setStep((s) => Math.min(s + 1, 3));
+    }
+  };
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
 
   const handleSubmit = async () => {
+    if (!validateStep(1) || !validateStep(2)) {
+      alert("Please complete all required fields correctly.");
+      return;
+    }
     setIsSubmitting(true);
     try {
       const response = await fetch("/api/apply", {
@@ -357,10 +401,10 @@ export default function App() {
                           <h2 className="text-2xl font-bold">Personal Information</h2>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <Input label="Full Name" placeholder="John Doe" value={formData.name} onChange={(v) => updateField("name", v)} icon={<User size={18} />} />
-                          <Input label="Father's Name" placeholder="Robert Doe" value={formData.fatherName} onChange={(v) => updateField("fatherName", v)} icon={<User size={18} />} />
+                          <Input label="Full Name" placeholder="John Doe" value={formData.name} onChange={(v) => updateField("name", v)} icon={<User size={18} />} error={errors.name} />
+                          <Input label="Father's Name" placeholder="Robert Doe" value={formData.fatherName} onChange={(v) => updateField("fatherName", v)} icon={<User size={18} />} error={errors.fatherName} />
                           <div className="md:col-span-2">
-                            <Input label="Full Address" placeholder="123 Street, City, State" value={formData.address} onChange={(v) => updateField("address", v)} icon={<MapPin size={18} />} />
+                            <Input label="Full Address" placeholder="123 Street, City, State" value={formData.address} onChange={(v) => updateField("address", v)} icon={<MapPin size={18} />} error={errors.address} />
                           </div>
                           <div className="flex flex-col gap-2">
                             <label className="text-sm font-semibold text-neutral-600">Gender</label>
@@ -368,6 +412,7 @@ export default function App() {
                               {["Male", "Female", "Other"].map((g) => (
                                 <button
                                   key={g}
+                                  type="button"
                                   onClick={() => updateField("gender", g)}
                                   className={cn(
                                     "flex-1 py-3 px-4 rounded-xl border text-sm font-medium transition-all",
@@ -379,9 +424,9 @@ export default function App() {
                               ))}
                             </div>
                           </div>
-                          <Input label="Phone Number" placeholder="+91 0000000000" type="tel" value={formData.phone} onChange={(v) => updateField("phone", v)} icon={<Phone size={18} />} />
+                          <Input label="Phone Number" placeholder="10 Digit Phone" type="tel" value={formData.phone} onChange={(v) => updateField("phone", v)} icon={<Phone size={18} />} error={errors.phone} />
                           <div className="md:col-span-2">
-                            <Input label="Email Address" placeholder="john@example.com" type="email" value={formData.email} onChange={(v) => updateField("email", v)} icon={<Mail size={18} />} />
+                            <Input label="Email Address" placeholder="john@example.com" type="email" value={formData.email} onChange={(v) => updateField("email", v)} icon={<Mail size={18} />} error={errors.email} />
                           </div>
                         </div>
                       </div>
@@ -399,12 +444,12 @@ export default function App() {
                           </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <Input label="Class/Degree" placeholder="B.Tech" value={formData.academicClass} onChange={(v) => updateField("academicClass", v)} icon={<GraduationCap size={18} />} />
-                          <Input label="Year/Semester" placeholder="3rd Year / 6th Sem" value={formData.yearSemester} onChange={(v) => updateField("yearSemester", v)} icon={<BookOpen size={18} />} />
-                          <Input label="Roll Number" placeholder="123456" value={formData.rollNo} onChange={(v) => updateField("rollNo", v)} />
-                          <Input label="College Name" placeholder="Example Institute of Tech" value={formData.collegeName} onChange={(v) => updateField("collegeName", v)} icon={<Building2 size={18} />} />
+                          <Input label="Class/Degree" placeholder="B.Tech" value={formData.academicClass} onChange={(v) => updateField("academicClass", v)} icon={<GraduationCap size={18} />} error={errors.academicClass} />
+                          <Input label="Year/Semester" placeholder="3rd Year / 6th Sem" value={formData.yearSemester} onChange={(v) => updateField("yearSemester", v)} icon={<BookOpen size={18} />} error={errors.yearSemester} />
+                          <Input label="Roll Number" placeholder="123456" value={formData.rollNo} onChange={(v) => updateField("rollNo", v)} error={errors.rollNo} />
+                          <Input label="College Name" placeholder="Example Institute of Tech" value={formData.collegeName} onChange={(v) => updateField("collegeName", v)} icon={<Building2 size={18} />} error={errors.collegeName} />
                           <div className="md:col-span-2">
-                            <Input label="University Name" placeholder="State University" value={formData.universityName} onChange={(v) => updateField("universityName", v)} icon={<Building2 size={18} />} />
+                            <Input label="University Name" placeholder="State University" value={formData.universityName} onChange={(v) => updateField("universityName", v)} icon={<Building2 size={18} />} error={errors.universityName} />
                           </div>
                           
                           <Select 
@@ -644,20 +689,32 @@ export default function App() {
   );
 }
 
-function Input({ label, value, onChange, placeholder, type = "text", icon }: { 
+function Input({ label, value, onChange, placeholder, type = "text", icon, error }: { 
   label: string; 
   value: string; 
   onChange: (v: string) => void;
   placeholder?: string;
   type?: string;
   icon?: React.ReactNode;
+  error?: string;
 }) {
   return (
     <div className="flex flex-col gap-2 group">
-      <label className="text-sm font-semibold text-neutral-600 transition-colors group-focus-within:text-blue-600">{label}</label>
+      <div className="flex justify-between items-center">
+        <label className={cn(
+          "text-sm font-semibold transition-colors group-focus-within:text-blue-600",
+          error ? "text-red-500" : "text-neutral-600"
+        )}>
+          {label}
+        </label>
+        {error && <span className="text-[10px] font-bold text-red-500 uppercase tracking-tighter">{error}</span>}
+      </div>
       <div className="relative">
         {icon && (
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-blue-500 transition-colors">
+          <div className={cn(
+            "absolute left-4 top-1/2 -translate-y-1/2 transition-colors",
+            error ? "text-red-400" : "text-neutral-400 group-focus-within:text-blue-500"
+          )}>
             {icon}
           </div>
         )}
@@ -667,7 +724,8 @@ function Input({ label, value, onChange, placeholder, type = "text", icon }: {
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           className={cn(
-            "w-full bg-neutral-50/50 border border-neutral-200 rounded-xl py-3 px-4 outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100",
+            "w-full bg-neutral-50/50 border rounded-xl py-3 px-4 outline-none transition-all focus:bg-white focus:ring-4",
+            error ? "border-red-500 focus:ring-red-100" : "border-neutral-200 focus:border-blue-500 focus:ring-blue-100",
             icon && "pl-11"
           )}
         />
