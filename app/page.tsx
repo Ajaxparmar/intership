@@ -15,7 +15,9 @@ import {
   MapPin,
   Building2,
   GraduationCap,
-  Briefcase
+  Briefcase,
+  Menu,
+  X
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -27,7 +29,7 @@ function cn(...inputs: ClassValue[]) {
 // Logo URL provided: https://www.codescaler.com/
 // I'll use a text-based logo with a professional icon if the live image fails or looks bad in a container.
 // But the user specifically asked to use the logo.
-const LOGO_URL = "https://www.codescaler.com/logo.png"; // Guessed common path, but I'll fallback to text.
+const LOGO_URL = "https://www.codescaler.com/assets/images/logo.png"; // Guessed common path, but I'll fallback to text.
 
 interface FormData {
   // Step 1
@@ -77,6 +79,11 @@ export default function App() {
   const [formData, setFormData] = useState<FormData>(INITIAL_DATA);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [view]);
 
   const price = DURATION_PRICES[formData.duration] || 0;
 
@@ -115,11 +122,13 @@ export default function App() {
       <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => setView("form")}>
-            <div className="w-20 h-20 rounded-lg flex items-center justify-center text-white font-bold text-xl">
-             <img src={LOGO_URL} alt="CodeScaler Logo" className="w-20 h-20 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
+              CS
             </div>
-            <span className="font-bold text-3xl tracking-tight text-neutral-800">CodeScaler</span>
+            <span className="font-bold text-xl tracking-tight text-neutral-800">CodeScaler</span>
           </div>
+
+          {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8 text-neutral-500 font-medium">
             <button onClick={() => setView("roadmap")} className={cn("hover:text-blue-600 transition-colors cursor-pointer", view === "roadmap" && "text-blue-600 font-bold")}>Roadmap</button>
             <button onClick={() => setView("form")} className={cn("hover:text-blue-600 transition-colors cursor-pointer", view === "form" && "text-blue-600 font-bold")}>Internship</button>
@@ -133,7 +142,54 @@ export default function App() {
               Contact Us
             </button>
           </div>
+
+          {/* Mobile Menu Toggle */}
+          <button 
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="md:hidden p-2 text-neutral-600 hover:bg-neutral-100 rounded-xl transition-colors"
+          >
+            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
+
+        {/* Mobile Nav Menu */}
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden border-t border-neutral-100 bg-white overflow-hidden"
+            >
+              <div className="px-4 py-6 flex flex-col gap-4">
+                <button 
+                  onClick={() => setView("roadmap")} 
+                  className={cn(
+                    "w-full py-4 px-6 rounded-2xl text-left font-bold transition-all",
+                    view === "roadmap" ? "bg-blue-50 text-blue-600" : "text-neutral-500 hover:bg-neutral-50"
+                  )}
+                >
+                  Internship Roadmap
+                </button>
+                <button 
+                  onClick={() => setView("form")} 
+                  className={cn(
+                    "w-full py-4 px-6 rounded-2xl text-left font-bold transition-all",
+                    view === "form" ? "bg-blue-50 text-blue-600" : "text-neutral-500 hover:bg-neutral-50"
+                  )}
+                >
+                  Application Form
+                </button>
+                <button 
+                  onClick={() => setView("contact")} 
+                  className="w-full py-4 px-6 bg-neutral-900 text-white rounded-2xl font-bold hover:bg-neutral-800 transition-all text-center"
+                >
+                  Contact Our Team
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
       {/* Main Content */}
@@ -153,7 +209,7 @@ export default function App() {
                 <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
                 Special Batch: Guru Jambheshwar University Students
               </motion.div>
-              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-neutral-900">
+              <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4 text-neutral-900 px-2">
                 Internship Program <span className="text-blue-600">2026</span>
               </h1>
               <p className="text-neutral-500 text-lg max-w-2xl mx-auto">
@@ -238,7 +294,7 @@ export default function App() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className="p-8 md:p-12"
+                    className="p-5 md:p-12"
                   >
                     {step === 1 && (
                       <div className="space-y-6">
@@ -505,7 +561,7 @@ function ContactView() {
         <p className="text-neutral-500 max-w-xl mx-auto italic">Have questions about the internship? Reach out to our team directly.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12">
         <div className="space-y-8">
           <div className="group p-8 bg-white rounded-3xl border border-neutral-100 shadow-sm hover:shadow-xl transition-all duration-300">
             <div className="flex items-start gap-6">
@@ -657,7 +713,7 @@ function RoadmapView() {
         ))}
       </div>
 
-      <div className="bg-neutral-900 text-white rounded-3xl p-10 md:p-16">
+      <div className="bg-neutral-900 text-white rounded-3xl p-6 md:p-16">
         <div className="flex flex-col md:flex-row gap-12 items-center">
           <div className="md:w-1/2">
             <h3 className="text-2xl font-bold mb-6">Training Instructions</h3>
