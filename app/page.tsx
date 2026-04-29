@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { QRCodeSVG } from "qrcode.react";
 import { 
   User, 
   BookOpen, 
@@ -17,7 +18,8 @@ import {
   GraduationCap,
   Briefcase,
   Menu,
-  X
+  X,
+  QrCode
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -80,6 +82,8 @@ export default function App() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showQRCode, setShowQRCode] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   useEffect(() => {
     setIsMenuOpen(false);
@@ -105,6 +109,7 @@ export default function App() {
       const result = await response.json();
       if (result.success) {
         setIsSubmitted(true);
+        setIsPaymentModalOpen(true);
       } else {
         alert(result.error || "Submission failed");
       }
@@ -261,27 +266,74 @@ export default function App() {
                     </div>
                     <h2 className="text-3xl font-bold mb-4">Application Submitted!</h2>
                     <p className="text-neutral-500 mb-8 max-w-md mx-auto">
-                      Thank you for applying to CodeScaler. Our team will review your details and contact you within 48 hours for the next steps.
+                      Thank you for applying to CodeScaler. Your details has been saved successfully.
                     </p>
                     <div className="flex flex-col gap-4 items-center">
-                      <div className="p-6 bg-blue-50 rounded-2xl border border-blue-100 w-full max-w-sm">
-                        <p className="text-blue-600 font-semibold mb-2">Proceed to Payment</p>
-                        <p className="text-neutral-600 text-sm mb-4">Amount to pay: ₹{price}</p>
-                        <a 
-                          href="https://rzp.io/l/codescaler-internship" 
-                          target="_blank" 
-                          className="block w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
-                        >
-                          Pay Now
-                        </a>
+                      <div className="p-6 bg-blue-50 rounded-2xl border border-blue-100 w-full max-w-md">
+                        {!showQRCode ? (
+                          <>
+                            <p className="text-blue-600 font-bold mb-2 text-lg">Order Summary</p>
+                            <div className="flex justify-between items-center mb-4 py-2 border-b border-blue-100/50">
+                              <span className="text-neutral-600">Internship Program</span>
+                              <span className="font-bold">₹{price}</span>
+                            </div>
+                            <button 
+                              onClick={() => {
+                                setIsPaymentModalOpen(true);
+                                setShowQRCode(true);
+                              }}
+                              className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2"
+                            >
+                              <QrCode size={20} />
+                              View Payment QR
+                            </button>
+                          </>
+                        ) : (
+                          <motion.div 
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="flex flex-col items-center"
+                          >
+                            <div className="bg-white p-4 rounded-2xl shadow-inner mb-6 border border-neutral-100">
+                                <QRCodeSVG value={`upi://pay?pa=codescaler@okaxis&pn=CodeScaler&am=${price}&cu=INR`} size={200} />
+                            </div>
+                            <div className="text-center space-y-4">
+                              <p className="font-bold text-neutral-800">Scan QR to Pay: ₹{price}</p>
+                              <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl">
+                                <p className="text-sm text-amber-800 font-semibold">
+                                  ⚠️ MANDATORY STEP:
+                                </p>
+                                <p className="text-sm text-amber-700 mt-1 leading-relaxed decoration-amber-300">
+                                  After payment, share your payment screenshot to <span className="font-black text-amber-900 underline">7201000220</span> on WhatsApp for confirmation.
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                <button 
+                                  onClick={() => setShowQRCode(false)}
+                                  className="flex-1 py-3 text-sm font-bold text-neutral-500 hover:text-neutral-800"
+                                >
+                                  Go Back
+                                </button>
+                                <a 
+                                  href="https://rzp.io/l/codescaler-internship" 
+                                  target="_blank"
+                                  className="flex-1 py-3 text-sm font-bold text-blue-600 hover:text-blue-800"
+                                >
+                                  Pay via Link
+                                </a>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
                       </div>
                       <button 
                         onClick={() => {
                             setStep(1);
                             setFormData(INITIAL_DATA);
                             setIsSubmitted(false);
+                            setShowQRCode(false);
                         }}
-                        className="text-neutral-400 text-sm hover:text-neutral-600 transition-colors"
+                        className="text-neutral-400 text-sm hover:text-neutral-600 transition-colors mt-4"
                       >
                         Submit another application
                       </button>
@@ -470,6 +522,124 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Payment Modal */}
+      <AnimatePresence>
+        {isPaymentModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm"
+              onClick={() => setIsPaymentModalOpen(false)}
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl shadow-neutral-900/20 overflow-hidden"
+            >
+              <button 
+                onClick={() => setIsPaymentModalOpen(false)}
+                className="absolute top-6 right-6 p-2 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded-full transition-all"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="p-8 md:p-10">
+                {!showQRCode ? (
+                  <div className="text-center">
+                    <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <CreditCard size={32} />
+                    </div>
+                    <h2 className="text-2xl font-bold mb-2">Final Step: Secure Payment</h2>
+                    <p className="text-neutral-500 mb-8 max-w-sm mx-auto">
+                      Your application for <b>{formData.domain}</b> is ready. Submit the internship fee to confirm your seat.
+                    </p>
+                    
+                    <div className="bg-neutral-50 rounded-2xl p-6 mb-8 border border-neutral-100 text-left">
+                       <div className="flex justify-between items-center mb-3 text-sm text-neutral-500">
+                          <span>Internship Duration</span>
+                          <span className="font-bold text-neutral-700">{formData.duration}</span>
+                       </div>
+                       <div className="flex justify-between items-center text-lg font-bold">
+                          <span>Processing Fee</span>
+                          <span className="text-blue-600">₹{price}</span>
+                       </div>
+                    </div>
+
+                    <button 
+                      onClick={() => setShowQRCode(true)}
+                      className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 active:scale-[0.98] flex items-center justify-center gap-3"
+                    >
+                      <QrCode size={24} />
+                      Pay Now
+                    </button>
+                    <p className="mt-6 text-xs text-neutral-400 font-medium">Securely processed via CodeScaler Finance Team</p>
+                  </div>
+                ) : (
+                  <motion.div 
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex flex-col items-center"
+                  >
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-6 border border-green-100">
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-600 animate-pulse" />
+                      Scan to Pay
+                    </div>
+                    
+                    <div className="bg-white p-6 rounded-[2rem] shadow-2xl border border-neutral-100 mb-8 relative group">
+                        <div className="absolute inset-0 bg-blue-500/5 blur-3xl rounded-full scale-75 group-hover:scale-100 transition-transform duration-700" />
+                        <div className="relative">
+                          <QRCodeSVG value={`upi://pay?pa=codescaler@okaxis&pn=CodeScaler&am=${price}&cu=INR`} size={220} />
+                        </div>
+                    </div>
+
+                    <div className="text-center space-y-6 w-full">
+                      <div>
+                        <p className="font-black text-3xl text-neutral-900">₹{price}</p>
+                        <p className="text-xs font-bold text-neutral-400 uppercase tracking-widest mt-1">Due Amount (GST Incl.)</p>
+                      </div>
+
+                      <div className="p-6 bg-blue-600 rounded-3xl text-white shadow-xl shadow-blue-900/20 text-left relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 blur-2xl rounded-full translate-x-1/2 -translate-y-1/2" />
+                        <p className="text-sm font-black uppercase tracking-widest mb-3 opacity-80 flex items-center gap-2">
+                           <CheckCircle2 size={16} />
+                           Mandatory Step
+                        </p>
+                        <p className="text-sm font-medium leading-relaxed">
+                          After successful payment, please share your <span className="font-black underline underline-offset-4 text-white">Payment Screenshot</span> to this number:
+                        </p>
+                        <div className="mt-4 py-3 px-4 bg-white/10 rounded-xl font-black text-center text-xl tracking-tighter">
+                          7201000220
+                        </div>
+                        <p className="text-[10px] text-white/60 mt-3 font-bold uppercase tracking-widest text-center italic">WhatsApp Only Support</p>
+                      </div>
+
+                      <div className="flex gap-4">
+                        <button 
+                          onClick={() => setShowQRCode(false)}
+                          className="flex-1 py-4 text-sm font-bold text-neutral-400 hover:text-neutral-900 transition-colors"
+                        >
+                          Go Back
+                        </button>
+                        <a 
+                          href="https://rzp.io/l/codescaler-internship" 
+                          target="_blank"
+                          className="flex-1 py-4 text-sm font-black text-blue-600 hover:text-blue-800 transition-colors border border-blue-100 rounded-2xl"
+                        >
+                          Pay via Link
+                        </a>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
