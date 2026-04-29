@@ -109,6 +109,7 @@ export default function App() {
       if (!formData.name.trim()) newErrors.name = "Full Name is required";
       if (!formData.fatherName.trim()) newErrors.fatherName = "Father's Name is required";
       if (!formData.address.trim()) newErrors.address = "Address is required";
+      if (!formData.gender) newErrors.gender = "Gender selection is required";
       if (!formData.phone.trim()) {
         newErrors.phone = "Phone Number is required";
       } else if (!/^\d{10}$/.test(formData.phone.replace(/[^0-9]/g, ""))) {
@@ -125,10 +126,18 @@ export default function App() {
       if (!formData.rollNo.trim()) newErrors.rollNo = "Roll Number is required";
       if (!formData.collegeName.trim()) newErrors.collegeName = "College Name is required";
       if (!formData.universityName.trim()) newErrors.universityName = "University Name is required";
+      if (!formData.duration) newErrors.duration = "Please select duration";
+      if (!formData.domain) newErrors.domain = "Please select a domain";
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const isValid = Object.keys(newErrors).length === 0;
+    if (!isValid) {
+      // Small feedback for mobile users if they try to skip
+      const firstError = Object.values(newErrors)[0];
+      console.warn("Validation failed:", firstError);
+    }
+    return isValid;
   };
 
   const nextStep = () => {
@@ -407,7 +416,13 @@ export default function App() {
                             <Input label="Full Address" placeholder="123 Street, City, State" value={formData.address} onChange={(v) => updateField("address", v)} icon={<MapPin size={18} />} error={errors.address} />
                           </div>
                           <div className="flex flex-col gap-2">
-                            <label className="text-sm font-semibold text-neutral-600">Gender</label>
+                            <div className="flex justify-between items-center">
+                              <label className={cn(
+                                "text-sm font-semibold transition-colors",
+                                errors.gender ? "text-red-500" : "text-neutral-600"
+                              )}>Gender</label>
+                              {errors.gender && <span className="text-[10px] font-bold text-red-500 uppercase tracking-tighter">{errors.gender}</span>}
+                            </div>
                             <div className="flex gap-4">
                               {["Male", "Female", "Other"].map((g) => (
                                 <button
@@ -457,6 +472,7 @@ export default function App() {
                             value={formData.duration} 
                             options={["1 month", "45 days", "2 month", "3 month", "6 month"]} 
                             onChange={(v) => updateField("duration", v)} 
+                            error={errors.duration}
                           />
                           <Select 
                             label="Selected Domain" 
@@ -464,6 +480,7 @@ export default function App() {
                             options={["Data Analyst Development", "Full Stack Web Development", "Frontend Web Development", "Backend Web Development"]} 
                             onChange={(v) => updateField("domain", v)} 
                             icon={<Briefcase size={18} />}
+                            error={errors.domain}
                           />
                         </div>
                       </div>
@@ -734,19 +751,31 @@ function Input({ label, value, onChange, placeholder, type = "text", icon, error
   );
 }
 
-function Select({ label, value, options, onChange, icon }: {
+function Select({ label, value, options, onChange, icon, error }: {
   label: string;
   value: string;
   options: string[];
   onChange: (v: string) => void;
   icon?: React.ReactNode;
+  error?: string;
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-sm font-semibold text-neutral-600">{label}</label>
+      <div className="flex justify-between items-center">
+        <label className={cn(
+          "text-sm font-semibold transition-colors",
+          error ? "text-red-500" : "text-neutral-600"
+        )}>
+          {label}
+        </label>
+        {error && <span className="text-[10px] font-bold text-red-500 uppercase tracking-tighter">{error}</span>}
+      </div>
       <div className="relative">
          {icon && (
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400">
+          <div className={cn(
+            "absolute left-4 top-1/2 -translate-y-1/2 transition-colors",
+            error ? "text-red-400" : "text-neutral-400"
+          )}>
             {icon}
           </div>
         )}
@@ -754,7 +783,8 @@ function Select({ label, value, options, onChange, icon }: {
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className={cn(
-            "w-full bg-neutral-50/50 border border-neutral-200 rounded-xl py-3 px-4 outline-none transition-all appearance-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100",
+            "w-full bg-neutral-50/50 border rounded-xl py-3 px-4 outline-none transition-all appearance-none focus:bg-white focus:ring-4",
+            error ? "border-red-500 focus:ring-red-100" : "border-neutral-200 focus:border-blue-500 focus:ring-blue-100",
             icon && "pl-11"
           )}
         >
