@@ -62,7 +62,7 @@ const INITIAL_DATA: FormData = {
   collegeName: "",
   universityName: "",
   duration: "1 month",
-  domain: "Full stack",
+  domain: "Full Stack Web Development",
 };
 
 const DURATION_PRICES: Record<string, number> = {
@@ -364,7 +364,7 @@ export default function App() {
                           <Select 
                             label="Selected Domain" 
                             value={formData.domain} 
-                            options={["Data Analyst", "Full stack", "Frontend", "Backend"]} 
+                            options={["Data Analyst Development", "Full Stack Web Development", "Frontend Web Development", "Backend Web Development"]} 
                             onChange={(v) => updateField("domain", v)} 
                             icon={<Briefcase size={18} />}
                           />
@@ -628,7 +628,7 @@ function ContactView() {
 function RoadmapView() {
   const roadmaps = [
     {
-      title: "Data Analyst",
+      title: "Data Analyst Development",
       icon: <Briefcase className="text-blue-500" />,
       topics: [
         { name: "Excel Mastery", detail: "Advanced formulas (VLOOKUP, INDEX-MATCH), Pivot tables and charts, Data cleaning with Power Query, Automating tasks with Macros and basic VBA." },
@@ -640,7 +640,7 @@ function RoadmapView() {
       ]
     },
     {
-      title: "Full Stack Development",
+      title: "Full Stack Web Development",
       icon: <GraduationCap className="text-purple-500" />,
       topics: [
         { name: "Web Fundamentals", detail: "Modern HTML5 (Semantic elements, SEO), CSS3 (Flexbox, CSS Grid, Custom properties), Responsive design with Mobile-First approach, and Web accessibility (ARIA)." },
@@ -653,7 +653,7 @@ function RoadmapView() {
       ]
     },
     {
-      title: "Frontend Development",
+      title: "Frontend Web Development",
       icon: <User className="text-green-500" />,
       topics: [
         { name: "UI Core", detail: "Advanced DOM manipulation, asynchronous JavaScript (Promises, Async/Await), Browser APIs, and building modern interactive web components." },
@@ -663,7 +663,7 @@ function RoadmapView() {
       ]
     },
     {
-      title: "Backend Development",
+      title: "Backend Web Development",
       icon: <Building2 className="text-orange-500" />,
       topics: [
         { name: "Runtime & Framework", detail: "Building scalable servers with Node.js and TypeScript, handling file systems, streams, and child processes, and Express.js advanced routing." },
