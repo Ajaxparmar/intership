@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import RunTimer from "@/app/timer";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -293,7 +294,7 @@ export default function App() {
                 Kickstart your career with CodeScaler. Join our intensive program and work on real-world projects with industry experts.
               </p>
             </div>
-
+          <RunTimer />
             {/* Step Indicator */}
             {!isSubmitted && (
               <div className="flex items-center justify-center mb-12 relative px-4">
