@@ -184,7 +184,7 @@ export default function App() {
               {/* Fallback to text if image fails */}
               {!LOGO_URL && <span>CS</span>}
             </div>
-           <a href="https://www.codescaler.com/"><span className="font-bold text-2xl tracking-tight text-neutral-800">CodeScaler</span></a>
+            <a href="https://www.codescaler.com/"><span className="font-bold text-2xl tracking-tight text-neutral-800">CodeScaler</span></a>
           </div>
 
           {/* Desktop Nav */}
@@ -193,16 +193,13 @@ export default function App() {
             <button onClick={() => setView("form")} className={cn("hover:text-blue-600 transition-colors cursor-pointer", view === "form" && "text-blue-600 font-bold")}>Internship</button>
 
             {/* add a button to donwload the pdf file */}
-            <button onClick={() => {
-              // Create a temporary link to trigger the download
-              const link = document.createElement("a");
-              link.href = "CodeScaler_Industrial_Training_Curriculum.pdf"; // Assuming the PDF is placed in the public folder
-              link.download = "CodeScaler_Industrial_Training_Curriculum.pdf";
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-            }}>Download</button>
-
+            <a
+              href="/CodeScaler_Industrial_Training_Curriculum.pdf"
+              download="CodeScaler_Industrial_Training_Curriculum.pdf"
+              className="cursor-pointer hover:text-blue-600 transition-colors font-medium text-neutral-500"
+            >
+              Download
+            </a>
 
 
             <button
@@ -253,6 +250,13 @@ export default function App() {
                 >
                   Application Form
                 </button>
+                <a
+                  href="/CodeScaler_Industrial_Training_Curriculum.pdf"
+                  download="CodeScaler_Industrial_Training_Curriculum.pdf"
+                  className="w-full py-4 px-6 rounded-2xl text-left font-bold transition-all cursor-pointer text-neutral-500 hover:bg-neutral-50 hover:text-blue-600"
+                >
+                  Download Curriculum
+                </a>
                 <button
                   onClick={() => setView("contact")}
                   className="w-full py-4 px-6 bg-neutral-900 text-white rounded-2xl font-bold hover:bg-neutral-800 transition-all text-center"
