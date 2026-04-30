@@ -7,6 +7,11 @@ export const metadata: Metadata = {
     default: "CodeScaler – IT Internship & Coding Training in Jind, Haryana",
     template: "%s | CodeScaler Internship",
   },
+  icons: {
+    icon: "/favicon.ico",          // main favicon
+    shortcut: "/favicon.ico",      // optional
+    apple: "/apple-touch-icon.png" // optional (for iPhone)
+  },
   description:
     "Join CodeScaler's internship program in Jind, Haryana. " +
     "Learn Full Stack, Frontend, Backend & Data Analytics. " +
