@@ -880,7 +880,7 @@ function ContactView() {
               <div>
                 <h3 className="text-xl font-bold mb-3">Phone Numbers</h3>
                 <div className="space-y-2">
-                  <p className="text-neutral-500 font-bold text-lg hover:text-green-600 transition-colors">095881 61422</p>
+                  <p className="text-neutral-500 font-bold text-lg hover:text-green-600 transition-colors">95881 61422</p>
                   <p className="text-neutral-500 font-bold text-lg hover:text-green-600 transition-colors">7015822199</p>
                 </div>
                 <p className="text-xs text-neutral-400 mt-4 uppercase tracking-widest font-bold">Mon - Sat: 9am to 6pm</p>
