@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 
-const DEADLINE = new Date("2026-05-01T23:59:59");
+const DEADLINE = new Date("2026-05-05T23:59:59");
 const BATCH_START = new Date("2026-04-01T00:00:00");
 const TOTAL_MS = DEADLINE.getTime() - BATCH_START.getTime();
 
@@ -97,7 +97,7 @@ export default function CountdownTimer() {
           Applications close
         </p>
         <p className="text-sm font-semibold text-neutral-600 mt-0.5">
-          Thursday, 1 May 2026 · Midnight
+          Thursday, 5 May 2026 · Midnight
         </p>
       </div>
 
@@ -134,7 +134,7 @@ export default function CountdownTimer() {
         </div>
         <div className="flex justify-between text-[10px] text-neutral-300 mt-1">
           <span>Batch opened</span>
-          <span>1 May deadline</span>
+          <span>5 May deadline</span>
         </div>
       </div>
 
