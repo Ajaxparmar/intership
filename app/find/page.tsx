@@ -45,6 +45,7 @@ interface StudentResult {
 export default function FindRegistrationPage() {
   const [rollNo, setRollNo] = useState("");
   const [college, setCollege] = useState("");
+  const [academicClass, setAcademicClass] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<StudentResult | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -55,6 +56,7 @@ export default function FindRegistrationPage() {
   const handleSearch = async () => {
     if (!rollNo.trim()) { setError("Please enter your Roll Number."); return; }
     if (!college) { setError("Please select your College."); return; }
+    if (!academicClass) { setError("Please select your Class."); return; }
 
     setLoading(true);
     setError("");
@@ -62,7 +64,7 @@ export default function FindRegistrationPage() {
     setSearched(false);
 
     try {
-      const params = new URLSearchParams({ rollNo: rollNo.trim(), college });
+      const params = new URLSearchParams({ rollNo: rollNo.trim(), college, academicClass });
       const res = await fetch(`/api/find?${params}`);
       const data = await res.json();
 
@@ -87,6 +89,7 @@ export default function FindRegistrationPage() {
   const reset = () => {
     setRollNo("");
     setCollege("");
+    setAcademicClass("");
     setResult(null);
     setError("");
     setSearched(false);
@@ -117,13 +120,12 @@ export default function FindRegistrationPage() {
             <a href="/" className="hover:text-blue-600 transition-colors font-bold text-blue-600">Internship</a>
             <a href="/CodeScaler_Industrial_Training_Curriculum.pdf"
               download className="hover:text-blue-600 transition-colors">Download</a>
-            <a href="/admission" className="hover:text-blue-600 transition-colors ">Admission</a>
-            <a href="/find" className="hover:text-blue-600 transition-colors ">Find Registation</a>
+                 <a href="/admission" className="hover:text-blue-600 transition-colors ">Admission</a>
+                 <a href="/find" className="hover:text-blue-600 transition-colors ">Find Registation</a>
             <a href="/contact"
               className="px-5 py-2 rounded-full font-bold bg-neutral-900 text-white hover:bg-neutral-800 transition-all">
               Contact Us
             </a>
-
           </div>
 
           <button onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -205,6 +207,29 @@ export default function FindRegistrationPage() {
                 >
                   <option value="" disabled>Select your college</option>
                   {COLLEGES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-400">
+                  <GraduationCap size={16} />
+                </div>
+              </div>
+            </div>
+
+            {/* Class Select */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-neutral-600">Class / Degree</label>
+              <div className="relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400">
+                  <BookOpen size={18} />
+                </div>
+                <select
+                  value={academicClass}
+                  onChange={e => { setAcademicClass(e.target.value); setError(""); }}
+                  className="w-full bg-neutral-50 border border-neutral-200 rounded-xl py-3.5 pl-11 pr-10 text-sm outline-none transition-all appearance-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                >
+                  <option value="" disabled>Select your class</option>
+                  {["BCA", "MCA", "B.Tech", "BA", "BSC"].map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
                 </select>
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-400">
                   <GraduationCap size={16} />
@@ -333,7 +358,14 @@ export default function FindRegistrationPage() {
                 </div>
 
                 {/* WhatsApp CTA */}
-         
+                <div className="p-4 bg-green-50 border border-green-200 rounded-2xl mb-4">
+                  <p className="text-sm text-green-800 font-semibold text-center leading-relaxed">
+                    📲 Share <span className="font-black">{result.registrationNo}</span> on WhatsApp{" "}
+                    <a href="https://wa.me/918572892552" target="_blank" rel="noopener noreferrer"
+                      className="underline font-black text-green-700">8572892552</a>{" "}
+                    to confirm your seat.
+                  </p>
+                </div>
 
                 {/* Action Buttons */}
                 <div className="flex gap-3">

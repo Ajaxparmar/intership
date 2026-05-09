@@ -6,10 +6,11 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const rollNo = searchParams.get("rollNo")?.trim();
     const college = searchParams.get("college")?.trim();
+    const academicClass = searchParams.get("academicClass")?.trim();
 
-    if (!rollNo || !college) {
+    if (!rollNo || !college || !academicClass) {
       return NextResponse.json(
-        { error: "Roll number and college are required." },
+        { error: "Roll number, college and class are required." },
         { status: 400 }
       );
     }
@@ -22,7 +23,7 @@ export async function GET(request: Request) {
           fullName: "Demo Student",
           registrationNo: "CS/2026/01/001",
           college,
-          academicClass: "B.Tech",
+          academicClass,
           semester: "6th",
           course: "Full Stack Development",
           rollNo,
@@ -37,7 +38,7 @@ export async function GET(request: Request) {
     }
 
     const student = await prisma.admission.findFirst({
-      where: { rollNo, college },
+      where: { rollNo, college, academicClass },
       select: {
         fullName: true,
         registrationNo: true,
