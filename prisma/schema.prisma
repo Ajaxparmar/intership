@@ -32,3 +32,36 @@ model Application {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
+
+
+
+model Admission {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+
+  // Personal Info
+  fullName        String
+  address         String
+  whatsappNo      String
+  email           String
+  fatherName      String
+  fatherContact   String
+  dob             String
+  gender          String
+  aadharCard      String
+
+  // Academic Info
+  academicClass   String
+  semester        String
+  rollNo          String
+  college         String
+  course          String
+  postCode        String
+
+  // Registration
+  registrationNo  String   @unique
+  collegeCode     String
+
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
