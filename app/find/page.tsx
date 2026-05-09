@@ -121,7 +121,7 @@ export default function FindRegistrationPage() {
             <a href="/CodeScaler_Industrial_Training_Curriculum.pdf"
               download className="hover:text-blue-600 transition-colors">Download</a>
                  <a href="/admission" className="hover:text-blue-600 transition-colors ">Admission</a>
-                 <a href="/find" className="hover:text-blue-600 transition-colors ">Find Registation</a>
+            <a href="/find" className="hover:text-blue-600 transition-colors ">Find Registation</a>
             <a href="/contact"
               className="px-5 py-2 rounded-full font-bold bg-neutral-900 text-white hover:bg-neutral-800 transition-all">
               Contact Us
@@ -144,6 +144,9 @@ export default function FindRegistrationPage() {
                 <a href="/" className="w-full py-4 px-6 rounded-2xl text-left font-bold bg-blue-50 text-blue-600">Application Form</a>
                 <a href="/CodeScaler_Industrial_Training_Curriculum.pdf" download
                   className="w-full py-4 px-6 rounded-2xl text-left font-bold text-neutral-500 hover:bg-neutral-50 hover:text-blue-600">Download Curriculum</a>
+                    <a href="/admission" className="w-full py-4 px-6 rounded-2xl text-left font-bold transition-all cursor-pointer text-neutral-500 hover:bg-neutral-50 hover:text-blue-600 ">Admission</a>
+                <a href="/find" className="w-full py-4 px-6 rounded-2xl text-left font-bold transition-all cursor-pointer text-neutral-500 hover:bg-neutral-50 hover:text-blue-600">Find Registation</a>
+             
                 <a href="/contact"
                   className="w-full py-4 px-6 bg-neutral-900 text-white rounded-2xl font-bold hover:bg-neutral-800 transition-all text-center">Contact Our Team</a>
               </div>
