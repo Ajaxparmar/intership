@@ -80,8 +80,26 @@ export async function POST(request: Request) {
       { success: true, registrationNo: admission.registrationNo, admissionId: admission.id },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Admission API error:", error);
+
+    // Prisma unique constraint violation code
+    if (error?.code === "P2002") {
+      const fields: string[] = error?.meta?.target ?? [];
+      if (fields.includes("rollNo") && fields.includes("college")) {
+        return NextResponse.json(
+          { error: "This Roll Number is already registered for the selected college. Each student can only apply once." },
+          { status: 409 }
+        );
+      }
+      if (fields.includes("registrationNo")) {
+        return NextResponse.json(
+          { error: "Registration number conflict. Please try again." },
+          { status: 409 }
+        );
+      }
+    }
+
     return NextResponse.json({ error: "Failed to submit application." }, { status: 500 });
   }
 }

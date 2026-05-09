@@ -61,7 +61,9 @@ model Admission {
   registrationNo  String   @unique
   collegeCode     String
 
-  // Timestamps
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  // rollNo must be unique per college (same roll number can exist in different colleges)
+  @@index([rollNo, college])
 }
