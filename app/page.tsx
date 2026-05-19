@@ -25,6 +25,7 @@ import {
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import RunTimer from "@/app/timer";
+import AlreadyRegisteredBanner from "./AlreadyRegisteredBanner";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -319,9 +320,13 @@ export default function App() {
                 </div>
               </div>
             )}
-
+     <div className="max-w-4xl mx-auto rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-neutral-100 overflow-hidden relative">
+              
+<AlreadyRegisteredBanner />
+</div>
             {/* Form Container */}
             <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-neutral-100 overflow-hidden relative">
+              
               <AnimatePresence mode="wait">
                 {isSubmitted ? (
                   <motion.div
