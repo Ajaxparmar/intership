@@ -252,8 +252,7 @@ export default function BatchesPage() {
             <a href="/"           className="hover:text-blue-600 transition-colors">Roadmap</a>
             <a href="/"           className="hover:text-blue-600 transition-colors">Internship</a>
             <a href="/admission"  className="hover:text-blue-600 transition-colors">Admission</a>
-            <a href="/batches"    className="text-blue-600 font-semibold border-b-2 border-blue-600 pb-0.5">Batches</a>
-            <a href="/admin/batches/add" className="hover:text-blue-600 transition-colors">Add Batch</a>
+            <a href="/batch"    className="text-blue-600 font-semibold border-b-2 border-blue-600 pb-0.5">Batches</a>
             <a href="/find"       className="hover:text-blue-600 transition-colors">Find Registration</a>
             <a href="/contact"    className="px-5 py-2 rounded-full bg-neutral-900 text-white font-bold hover:bg-neutral-800 transition-all">
               Contact Us

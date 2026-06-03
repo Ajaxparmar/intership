@@ -162,6 +162,7 @@ export default function AdmissionPage() {
             <a href="/" className="hover:text-blue-600 transition-colors cursor-pointer">Roadmap</a>
             <a href="/" className="hover:text-blue-600 transition-colors cursor-pointer">Internship</a>
             <a href="/admission" className="hover:text-blue-600 transition-colors ">Admission</a>
+            <a href="/batch"    className="text-blue-600 font-semibold border-b-2 border-blue-600 pb-0.5">Batches</a>
             <a href="/find" className="hover:text-blue-600 transition-colors ">Find Registation</a>
             <a
               href="/CodeScaler_Industrial_Training_Curriculum.pdf"
@@ -209,6 +210,7 @@ export default function AdmissionPage() {
                 >
                   Application Form
                 </a>
+                <a href="/batch"    className="text-blue-600 font-semibold border-b-2 border-blue-600 pb-0.5">Batches</a>
                 <a
                   href="/CodeScaler_Industrial_Training_Curriculum.pdf"
                   download="CodeScaler_Industrial_Training_Curriculum.pdf"
@@ -218,7 +220,7 @@ export default function AdmissionPage() {
                 </a>
                 <a href="/admission" className="w-full py-4 px-6 rounded-2xl text-left font-bold transition-all cursor-pointer text-neutral-500 hover:bg-neutral-50 hover:text-blue-600 ">Admission</a>
                 <a href="/find" className="w-full py-4 px-6 rounded-2xl text-left font-bold transition-all cursor-pointer text-neutral-500 hover:bg-neutral-50 hover:text-blue-600">Find Registation</a>
-             
+                <a href="/batch"    className="text-blue-600 font-semibold border-b-2 border-blue-600 pb-0.5">Batches</a>
                 <a
                   href="/contact"
                   className="w-full py-4 px-6 bg-neutral-900 text-white rounded-2xl font-bold hover:bg-neutral-800 transition-all text-center"

@@ -144,6 +144,7 @@ export default function FindRegistrationPage() {
                 <a href="/" className="w-full py-4 px-6 rounded-2xl text-left font-bold bg-blue-50 text-blue-600">Application Form</a>
                 <a href="/CodeScaler_Industrial_Training_Curriculum.pdf" download
                   className="w-full py-4 px-6 rounded-2xl text-left font-bold text-neutral-500 hover:bg-neutral-50 hover:text-blue-600">Download Curriculum</a>
+                    <a href="/batch"    className="text-blue-600 font-semibold border-b-2 border-blue-600 pb-0.5">Batches</a>
                     <a href="/admission" className="w-full py-4 px-6 rounded-2xl text-left font-bold transition-all cursor-pointer text-neutral-500 hover:bg-neutral-50 hover:text-blue-600 ">Admission</a>
                 <a href="/find" className="w-full py-4 px-6 rounded-2xl text-left font-bold transition-all cursor-pointer text-neutral-500 hover:bg-neutral-50 hover:text-blue-600">Find Registation</a>
              
