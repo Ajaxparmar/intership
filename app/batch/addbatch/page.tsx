@@ -360,7 +360,7 @@ export default function AddBatchPage() {
 
 // ── Seat Grid ──────────────────────────────────────────────
 
-export function SeatGrid({ total, booked, preview = false }: { total: number; booked: number; preview?: boolean }) {
+function SeatGrid({ total, booked, preview = false }: { total: number; booked: number; preview?: boolean }) {
   // clamp to reasonable display max (show first 60, indicate rest)
   const displayMax = 60;
   const show   = Math.min(total, displayMax);
