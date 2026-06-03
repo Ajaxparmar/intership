@@ -67,3 +67,65 @@ model Admission {
   // rollNo must be unique per college (same roll number can exist in different colleges)
   @@index([rollNo, college])
 }
+
+
+
+enum BatchType {
+  ONLINE
+  OFFLINE
+  HYBRID
+}
+
+enum BatchStatus {
+  UPCOMING
+  ONGOING
+  FULL
+  COMPLETED
+}
+
+model Batch {
+  id           String      @id @default(auto()) @map("_id") @db.ObjectId
+
+  name         String                  // e.g. "Batch A – Morning"
+  course       String                  // e.g. "Full Stack Development"
+  batchType    BatchType               // ONLINE | OFFLINE | HYBRID
+  instructor   String?
+
+  startDate    String                  // stored as "YYYY-MM-DD" string for simplicity
+  endDate      String
+  timingStart  String                  // "09:00"
+  timingEnd    String                  // "11:00"
+  days         String[]                // ["Mon", "Wed", "Fri"]
+
+  totalSeats   Int
+  bookedSeats  Int         @default(0) // incremented on each booking
+
+  status       BatchStatus @default(UPCOMING)
+  description  String?
+
+  bookings     BookedSeat[]
+
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([course, status])
+}
+
+model BookedSeat {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+
+  // Student info — no prior admission required
+  fullName    String
+  whatsappNo  String
+  email       String
+  college     String
+
+  batchId     String   @db.ObjectId
+  batch       Batch    @relation(fields: [batchId], references: [id])
+
+  createdAt   DateTime @default(now())
+
+  // One student (by email) can book only one seat per batch
+  @@unique([email, batchId])
+  @@index([batchId])
+}
