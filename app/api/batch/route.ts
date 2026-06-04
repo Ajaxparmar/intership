@@ -1,11 +1,22 @@
+// 
+
 // app/api/batches/route.ts
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+// ── Helpers ───────────────────────────────────────────────
+function err400(error: string) {
+  return NextResponse.json({ success: false, error }, { status: 400 });
+}
 
+/** Accepts formats: 10 digits, optionally prefixed with +91 or 0 */
+function isValidIndianPhone(phone: string): boolean {
+  const cleaned = phone.replace(/[\s\-()]/g, "");
+  return /^(\+91|0)?[6-9]\d{9}$/.test(cleaned);
+}
 
-// ── GET /api/batches ─────────────────────────────────────
+// ── GET /api/batches ──────────────────────────────────────
 // Query params: ?course=&status=&batchType=
 export async function GET(req: Request) {
   try {
@@ -21,7 +32,12 @@ export async function GET(req: Request) {
         ...(batchType && { batchType: batchType as any }),
       },
       include: { _count: { select: { bookings: true } } },
-      orderBy: { createdAt: "desc" },
+      orderBy: [
+        // Sort by status priority first
+        { status: "asc" },
+        // Then by startDate ascending within the same status
+        { startDate: "asc" },
+      ],
     });
 
     return NextResponse.json({ success: true, batches });
@@ -34,7 +50,7 @@ export async function GET(req: Request) {
   }
 }
 
-// ── POST /api/batches ────────────────────────────────────
+// ── POST /api/batches ─────────────────────────────────────
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -43,28 +59,46 @@ export async function POST(req: Request) {
       name, course, batchType, instructor,
       startDate, endDate, timingStart, timingEnd,
       days, totalSeats, description,
+      instructorPhone,   // optional instructor contact
     } = body;
 
-    // Validation
-    if (!name?.trim())     return err400("Batch name is required.");
-    if (!course)           return err400("Course is required.");
-    if (!batchType)        return err400("Batch type is required.");
-    if (!startDate)        return err400("Start date is required.");
-    if (!endDate)          return err400("End date is required.");
-    if (endDate <= startDate) return err400("End date must be after start date.");
-    if (!timingStart)      return err400("Start time is required.");
-    if (!timingEnd)        return err400("End time is required.");
-    if (timingEnd <= timingStart) return err400("End time must be after start time.");
-    if (!days?.length)     return err400("Select at least one class day.");
+    // ── Required field validation ──────────────────────────
+    if (!name?.trim())
+      return err400("Batch name is required.");
+    if (!course)
+      return err400("Course is required.");
+    if (!batchType)
+      return err400("Batch type is required.");
+    if (!startDate)
+      return err400("Start date is required.");
+    if (!endDate)
+      return err400("End date is required.");
+    if (endDate <= startDate)
+      return err400("End date must be after start date.");
+    if (!timingStart)
+      return err400("Start time is required.");
+    if (!timingEnd)
+      return err400("End time is required.");
+    if (timingEnd <= timingStart)
+      return err400("End time must be after start time.");
+    if (!days?.length)
+      return err400("Select at least one class day.");
     if (!totalSeats || isNaN(Number(totalSeats)) || Number(totalSeats) < 1)
       return err400("Total seats must be at least 1.");
 
+    // ── Phone validation (optional field) ─────────────────
+    if (instructorPhone?.trim() && !isValidIndianPhone(instructorPhone.trim())) {
+      return err400(
+        "Instructor phone must be a valid 10-digit Indian mobile number (starts with 6–9), optionally prefixed with +91 or 0."
+      );
+    }
+
     const batch = await prisma.batch.create({
       data: {
-        name:        name.trim(),
+        name:            name.trim(),
         course,
         batchType,
-        instructor:  instructor?.trim() || null,
+        instructor:      instructor?.trim()      || null,
         startDate,
         endDate,
         timingStart,
@@ -84,8 +118,4 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   }
-}
-
-function err400(error: string) {
-  return NextResponse.json({ success: false, error }, { status: 400 });
 }
