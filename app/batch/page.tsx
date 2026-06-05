@@ -1341,14 +1341,14 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Calendar, Clock, Monitor, Building2, Blend,
-  CheckCircle2, X, Search, ArrowRight, Menu, BookOpen,
+  CheckCircle2, X, Search, ArrowRight, BookOpen,
   AlertCircle, User, Phone, Mail, GraduationCap,
   Layers, ChevronRight,
 } from "lucide-react";
+import Header from "@/app/components/Header";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-const LOGO_URL = "https://www.codescaler.com/logo.png";
 function cn(...inputs: ClassValue[]) { return twMerge(clsx(inputs)); }
 
 // ── Types ──────────────────────────────────────────────────
@@ -1500,7 +1500,6 @@ export default function BatchesPage() {
   const [courseFilter, setCourseFilter] = useState("All");
   const [typeFilter,   setTypeFilter]   = useState<BatchType | "All">("All");
   const [search,       setSearch]       = useState("");
-  const [isMenuOpen,   setIsMenuOpen]   = useState(false);
 
   // modal
   const [active,      setActive]      = useState<Batch | null>(null);
@@ -1609,58 +1608,7 @@ export default function BatchesPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40">
 
-      {/* Nav */}
-      <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-neutral-200">
-        <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <img src={LOGO_URL} alt="CodeScaler" className="w-20 h-20 object-contain"
-              onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}/>
-            <a href="https://www.codescaler.com/">
-              <span className="font-bold text-2xl tracking-tight text-neutral-800">CodeScaler</span>
-            </a>
-          </div>
-          <div className="hidden md:flex items-center gap-8 text-neutral-500 font-medium">
-            <a href="/"          className="hover:text-blue-600 transition-colors">Roadmap</a>
-            <a href="/"          className="hover:text-blue-600 transition-colors">Internship</a>
-            <a href="/admission" className="hover:text-blue-600 transition-colors">Admission</a>
-            <a href="/batch"     className="text-blue-600 font-semibold border-b-2 border-blue-600 pb-0.5">Batches</a>
-            <a href="/find"      className="hover:text-blue-600 transition-colors">Find Registration</a>
-            <a href="/contact"   className="px-5 py-2 rounded-full bg-neutral-900 text-white font-bold hover:bg-neutral-800 transition-all">
-              Contact Us
-            </a>
-          </div>
-          <button onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 text-neutral-600 hover:bg-neutral-100 rounded-xl transition-colors">
-            {isMenuOpen ? <X size={24}/> : <Menu size={24}/>}
-          </button>
-        </div>
-        <AnimatePresence>
-          {isMenuOpen && (
-            <motion.div initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:"auto" }}
-              exit={{ opacity:0, height:0 }}
-              className="md:hidden border-t border-neutral-100 bg-white overflow-hidden">
-              <div className="px-4 py-6 flex flex-col gap-3">
-                {[
-                  { href:"/",                  label:"Roadmap"            },
-                  { href:"/admission",         label:"Admission"          },
-                  { href:"/batches",           label:"Batches", active:true },
-                  { href:"/admin/batches/add", label:"Add Batch"          },
-                  { href:"/find",              label:"Find Registration"   },
-                ].map(l => (
-                  <a key={l.href} href={l.href}
-                    className={cn("w-full py-4 px-6 rounded-2xl font-bold transition-all",
-                      l.active ? "bg-blue-50 text-blue-600" : "text-neutral-500 hover:bg-neutral-50")}>
-                    {l.label}
-                  </a>
-                ))}
-                <a href="/contact" className="w-full py-4 px-6 bg-neutral-900 text-white rounded-2xl font-bold text-center">
-                  Contact Our Team
-                </a>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </nav>
+      <Header active="batches" />
 
       {/* Body */}
       <div className="max-w-6xl mx-auto px-4 py-10">

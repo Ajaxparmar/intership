@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -18,7 +18,6 @@ import {
   Building2,
   GraduationCap,
   Briefcase,
-  Menu,
   X,
   QrCode
 } from "lucide-react";
@@ -26,6 +25,7 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import RunTimer from "@/app/timer";
 import AlreadyRegisteredBanner from "./AlreadyRegisteredBanner";
+import Header from "@/app/components/Header";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -82,14 +82,9 @@ export default function App() {
   const [formData, setFormData] = useState<FormData>(INITIAL_DATA);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showQRCode, setShowQRCode] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
-
-  useEffect(() => {
-    setIsMenuOpen(false);
-  }, [view]);
 
   const price = DURATION_PRICES[formData.duration] || 0;
 
@@ -174,107 +169,12 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-neutral-50 text-neutral-900 font-sans selection:bg-blue-100">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-neutral-200">
-        <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setView("form")}>
-            <div className="w-15 h-15  rounded-lg flex items-center justify-center text-white font-bold text-xl">
-              {/* add logo.png  */}
-              <img src={LOGO_URL} alt="CodeScaler Logo" className="w-20 h-20 object-contain" onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
-              }} />
-              {/* Fallback to text if image fails */}
-              {!LOGO_URL && <span>CS</span>}
-            </div>
-            <a href="https://www.codescaler.com/"><span className="font-bold text-2xl tracking-tight text-neutral-800">CodeScaler</span></a>
-          </div>
-
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-8 text-neutral-500 font-medium">
-            <button onClick={() => setView("roadmap")} className={cn("hover:text-blue-600 transition-colors cursor-pointer", view === "roadmap" && "text-blue-600 font-bold")}>Roadmap</button>
-            <button onClick={() => setView("form")} className={cn("hover:text-blue-600 transition-colors cursor-pointer", view === "form" && "text-blue-600 font-bold")}>Internship</button>
-
-            {/* add a button to donwload the pdf file */}
-            <a
-              href="/CodeScaler_Industrial_Training_Curriculum.pdf"
-              download="CodeScaler_Industrial_Training_Curriculum.pdf"
-              className="cursor-pointer hover:text-blue-600 transition-colors font-medium text-neutral-500"
-            >
-              Download
-            </a>
-            <a href="/batch"    className="text-blue-600 font-semibold border-b-2 border-blue-600 pb-0.5">Batches</a>
-            <a href="/admission" className="hover:text-blue-600 transition-colors ">Admission</a>
-            <a href="/find" className="hover:text-blue-600 transition-colors ">Find Registation</a>
-
-            <button
-              onClick={() => setView("contact")}
-              className={cn(
-                "px-5 py-2 rounded-full transition-all font-bold",
-                view === "contact" ? "bg-blue-600 text-white" : "bg-neutral-900 text-white hover:bg-neutral-800"
-              )}
-            >
-              Contact Us
-            </button>
-          </div>
-
-          {/* Mobile Menu Toggle */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 text-neutral-600 hover:bg-neutral-100 rounded-xl transition-colors"
-          >
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
-
-        {/* Mobile Nav Menu */}
-        <AnimatePresence>
-          {isMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="md:hidden border-t border-neutral-100 bg-white overflow-hidden"
-            >
-              <div className="px-4 py-6 flex flex-col gap-4">
-                <button
-                  onClick={() => setView("roadmap")}
-                  className={cn(
-                    "w-full py-4 px-6 rounded-2xl text-left font-bold transition-all",
-                    view === "roadmap" ? "bg-blue-50 text-blue-600" : "text-neutral-500 hover:bg-neutral-50"
-                  )}
-                >
-                  Internship Roadmap
-                </button>
-                <button
-                  onClick={() => setView("form")}
-                  className={cn(
-                    "w-full py-4 px-6 rounded-2xl text-left font-bold transition-all",
-                    view === "form" ? "bg-blue-50 text-blue-600" : "text-neutral-500 hover:bg-neutral-50"
-                  )}
-                >
-                  Application Form
-                </button>
-                <a
-                  href="/CodeScaler_Industrial_Training_Curriculum.pdf"
-                  download="CodeScaler_Industrial_Training_Curriculum.pdf"
-                  className="w-full py-4 px-6 rounded-2xl text-left font-bold transition-all cursor-pointer text-neutral-500 hover:bg-neutral-50 hover:text-blue-600"
-                >
-                  Download Curriculum
-                </a>
-                <a href="/batch"    className="text-blue-600 font-semibold border-b-2 border-blue-600 pb-0.5">Batches</a>
-                <a href="/admission" className="w-full py-4 px-6 rounded-2xl text-left font-bold transition-all cursor-pointer text-neutral-500 hover:bg-neutral-50 hover:text-blue-600 ">Admission</a>
-                <a href="/find" className="w-full py-4 px-6 rounded-2xl text-left font-bold transition-all cursor-pointer text-neutral-500 hover:bg-neutral-50 hover:text-blue-600">Find Registation</a>
-                <button
-                  onClick={() => setView("contact")}
-                  className="w-full py-4 px-6 bg-neutral-900 text-white rounded-2xl font-bold hover:bg-neutral-800 transition-all text-center"
-                >
-                  Contact Our Team
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </nav>
+      <Header
+        active={view === "form" ? "internship" : view}
+        onRoadmapClick={() => setView("roadmap")}
+        onInternshipClick={() => setView("form")}
+        onContactClick={() => setView("contact")}
+      />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-12 md:py-20">

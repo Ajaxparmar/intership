@@ -1,15 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   User, MapPin, Phone, Mail, Calendar, CreditCard,
   BookOpen, Building2, GraduationCap, CheckCircle2,
   ChevronRight, ChevronLeft, ArrowRight, X, Briefcase, Hash,
-  Menu
 } from "lucide-react";
+import Header from "@/app/components/Header";
 
-const LOGO_URL = "https://www.codescaler.com/logo.png";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -70,9 +69,6 @@ export default function AdmissionPage() {
   const [errors, setErrors] = useState<Errors>({});
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState<SuccessData | null>(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  useEffect(() => { setIsMenuOpen(false); }, []);
 
   const update = (field: keyof FormData, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -143,95 +139,7 @@ export default function AdmissionPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-neutral-200">
-        <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer">
-            <div className="w-15 h-15 rounded-lg flex items-center justify-center text-white font-bold text-xl">
-              <img src={LOGO_URL} alt="CodeScaler Logo" className="w-20 h-20 object-contain" onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
-              }} />
-            </div>
-            <a href="https://www.codescaler.com/">
-              <span className="font-bold text-2xl tracking-tight text-neutral-800">CodeScaler</span>
-            </a>
-          </div>
-
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-8 text-neutral-500 font-medium">
-            <a href="/" className="hover:text-blue-600 transition-colors cursor-pointer">Roadmap</a>
-            <a href="/" className="hover:text-blue-600 transition-colors cursor-pointer">Internship</a>
-            <a href="/admission" className="hover:text-blue-600 transition-colors ">Admission</a>
-            <a href="/batch"    className="text-blue-600 font-semibold border-b-2 border-blue-600 pb-0.5">Batches</a>
-            <a href="/find" className="hover:text-blue-600 transition-colors ">Find Registation</a>
-            <a
-              href="/CodeScaler_Industrial_Training_Curriculum.pdf"
-              download="CodeScaler_Industrial_Training_Curriculum.pdf"
-              className="cursor-pointer hover:text-blue-600 transition-colors font-medium text-neutral-500"
-            >
-              Download
-            </a>
-            <a
-              href="/contact"
-              className="px-5 py-2 rounded-full transition-all font-bold bg-neutral-900 text-white hover:bg-neutral-800"
-            >
-              Contact Us
-            </a>
-          </div>
-
-          {/* Mobile Menu Toggle */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 text-neutral-600 hover:bg-neutral-100 rounded-xl transition-colors"
-          >
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
-
-        {/* Mobile Nav Menu */}
-        <AnimatePresence>
-          {isMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="md:hidden border-t border-neutral-100 bg-white overflow-hidden"
-            >
-              <div className="px-4 py-6 flex flex-col gap-4">
-                <a
-                  href="/"
-                  className="w-full py-4 px-6 rounded-2xl text-left font-bold transition-all text-neutral-500 hover:bg-neutral-50"
-                >
-                  Internship Roadmap
-                </a>
-                <a
-                  href="/"
-                  className="w-full py-4 px-6 rounded-2xl text-left font-bold transition-all text-neutral-500 hover:bg-neutral-50"
-                >
-                  Application Form
-                </a>
-                <a href="/batch"    className="text-blue-600 font-semibold border-b-2 border-blue-600 pb-0.5">Batches</a>
-                <a
-                  href="/CodeScaler_Industrial_Training_Curriculum.pdf"
-                  download="CodeScaler_Industrial_Training_Curriculum.pdf"
-                  className="w-full py-4 px-6 rounded-2xl text-left font-bold transition-all cursor-pointer text-neutral-500 hover:bg-neutral-50 hover:text-blue-600"
-                >
-                  Download Curriculum
-                </a>
-                <a href="/admission" className="w-full py-4 px-6 rounded-2xl text-left font-bold transition-all cursor-pointer text-neutral-500 hover:bg-neutral-50 hover:text-blue-600 ">Admission</a>
-                <a href="/find" className="w-full py-4 px-6 rounded-2xl text-left font-bold transition-all cursor-pointer text-neutral-500 hover:bg-neutral-50 hover:text-blue-600">Find Registation</a>
-                <a href="/batch"    className="text-blue-600 font-semibold border-b-2 border-blue-600 pb-0.5">Batches</a>
-                <a
-                  href="/contact"
-                  className="w-full py-4 px-6 bg-neutral-900 text-white rounded-2xl font-bold hover:bg-neutral-800 transition-all text-center"
-                >
-                  Contact Our Team
-                </a>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </nav>
+      <Header active="admission" />
 
       <div className="max-w-4xl mx-auto px-4 py-10">
         {/* Title */}

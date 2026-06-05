@@ -1396,12 +1396,12 @@ import {
   Search, Trash2, Pencil, X, CheckCircle2, AlertCircle,
   ChevronLeft, ChevronRight, Users, Monitor, Building2, Blend,
   ArrowRight, User, Phone, Mail, GraduationCap, ChevronDown,
-  Menu, RefreshCw, Calendar, Clock, ArrowLeftRight,
+  RefreshCw, Calendar, Clock, ArrowLeftRight,
 } from "lucide-react";
+import Header from "@/app/components/Header";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-const LOGO_URL = "https://www.codescaler.com/logo.png";
 function cn(...inputs: ClassValue[]) { return twMerge(clsx(inputs)); }
 
 // ── Types ──────────────────────────────────────────────────
@@ -1529,7 +1529,6 @@ export default function AdminBookingsPage() {
   const [search,      setSearch]      = useState("");
   const [batchFilter, setBatchFilter] = useState("");
   const [limit,       setLimit]       = useState(20);
-  const [isMenuOpen,  setIsMenuOpen]  = useState(false);
 
   // batches dropdown (fetched once)
   const [batches, setBatches] = useState<BatchMini[]>([]);
@@ -1738,31 +1737,10 @@ export default function AdminBookingsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40">
 
-      {/* Nav */}
-      <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-neutral-200">
-        <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <img src={LOGO_URL} alt="CodeScaler" className="w-20 h-20 object-contain"
-              onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
-            <a href="https://www.codescaler.com/">
-              <span className="font-bold text-2xl tracking-tight text-neutral-800">CodeScaler</span>
-            </a>
-          </div>
-          <div className="hidden md:flex items-center gap-8 text-neutral-500 font-medium">
-            <a href="/"               className="hover:text-blue-600 transition-colors">Roadmap</a>
-            <a href="/admission"      className="hover:text-blue-600 transition-colors">Admission</a>
-            <a href="/batch"          className="hover:text-blue-600 transition-colors">Batches</a>
-            <a href="/admin/bookings" className="text-blue-600 font-semibold border-b-2 border-blue-600 pb-0.5">Bookings</a>
-            <a href="/contact"        className="px-5 py-2 rounded-full bg-neutral-900 text-white font-bold hover:bg-neutral-800 transition-all">
-              Contact Us
-            </a>
-          </div>
-          <button onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 text-neutral-600 hover:bg-neutral-100 rounded-xl transition-colors">
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
-      </nav>
+      <Header
+        active="bookings"
+        extraLinks={[{ key: "bookings", label: "Bookings", href: "/batch/editbatch" }]}
+      />
 
       {/* Body */}
       <div className="max-w-7xl mx-auto px-4 py-10">

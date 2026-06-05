@@ -6,12 +6,12 @@ import {
   Users, Search, Trash2, Pencil, X, Check, ChevronLeft,
   Mail, Phone, Building2 as CollegeIcon, Calendar,
   AlertTriangle, Download, Monitor, Building2, Blend,
-  Loader2, RefreshCw, UserX, Menu, BookOpen,
+  Loader2, RefreshCw, UserX, BookOpen,
 } from "lucide-react";
+import Header from "@/app/components/Header";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-const LOGO_URL = "https://www.codescaler.com/logo.png";
 function cn(...inputs: ClassValue[]) { return twMerge(clsx(inputs)); }
 
 // ── Types matching Prisma schema ──────────────────────────
@@ -342,7 +342,6 @@ export default function BatchStudentsPage({
   const [search,     setSearch]     = useState("");
   const [editTarget, setEditTarget] = useState<BookedSeat | null>(null);
   const [delTarget,  setDelTarget]  = useState<BookedSeat | null>(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [fetchError, setFetchError] = useState("");
 
   const load = useCallback(async () => {
@@ -401,54 +400,10 @@ export default function BatchStudentsPage({
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40">
 
-      {/* ── Nav ── */}
-      <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-neutral-200">
-        <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <img src={LOGO_URL} alt="CodeScaler" className="w-20 h-20 object-contain"
-              onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}/>
-            <a href="https://www.codescaler.com/">
-              <span className="font-bold text-2xl tracking-tight text-neutral-800">CodeScaler</span>
-            </a>
-          </div>
-          <div className="hidden md:flex items-center gap-8 text-neutral-500 font-medium">
-            <a href="/"                  className="hover:text-blue-600 transition-colors">Roadmap</a>
-            <a href="/admission"         className="hover:text-blue-600 transition-colors">Admission</a>
-            <a href="/batch"             className="text-blue-600 font-semibold border-b-2 border-blue-600 pb-0.5">Batches</a>
-            <a href="/admin/batches/add" className="hover:text-blue-600 transition-colors">Add Batch</a>
-            <a href="/contact" className="px-5 py-2 rounded-full bg-neutral-900 text-white font-bold hover:bg-neutral-800 transition-all">
-              Contact Us
-            </a>
-          </div>
-          <button onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 text-neutral-600 hover:bg-neutral-100 rounded-xl transition-colors">
-            {isMenuOpen ? <X size={24}/> : <Menu size={24}/>}
-          </button>
-        </div>
-
-        <AnimatePresence>
-          {isMenuOpen && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="md:hidden border-t border-neutral-100 bg-white overflow-hidden">
-              <div className="px-4 py-6 flex flex-col gap-3">
-                {[
-                  { href: "/",                  label: "Roadmap"   },
-                  { href: "/admission",         label: "Admission" },
-                  { href: "/batch",             label: "Batches", active: true },
-                  { href: "/admin/batches/add", label: "Add Batch" },
-                ].map(l => (
-                  <a key={l.href} href={l.href}
-                    className={cn("py-4 px-6 rounded-2xl font-bold transition-all",
-                      l.active ? "bg-blue-50 text-blue-600" : "text-neutral-500 hover:bg-neutral-50")}>
-                    {l.label}
-                  </a>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </nav>
+      <Header
+        active="batches"
+        extraLinks={[{ key: "addBatch", label: "Add Batch", href: "/batch/addbatch" }]}
+      />
 
       <div className="max-w-6xl mx-auto px-4 py-10 space-y-6">
 

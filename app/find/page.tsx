@@ -4,9 +4,10 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Search, Hash, Building2, CheckCircle2,
-  AlertCircle, X, Menu, GraduationCap, User,
+  AlertCircle, X, GraduationCap, User,
   CreditCard, Phone, Mail, BookOpen, MapPin
 } from "lucide-react";
+import Header from "@/app/components/Header";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -51,7 +52,6 @@ export default function FindRegistrationPage() {
   const [showModal, setShowModal] = useState(false);
   const [error, setError] = useState("");
   const [searched, setSearched] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleSearch = async () => {
     if (!rollNo.trim()) { setError("Please enter your Roll Number."); return; }
@@ -101,60 +101,7 @@ export default function FindRegistrationPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-blue-50/20 to-indigo-50/30">
 
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-neutral-200">
-        <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="rounded-lg flex items-center justify-center text-white font-bold text-xl">
-              <img src={LOGO_URL} alt="CodeScaler Logo" className="w-20 h-20 object-contain"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-            </div>
-            <a href="https://www.codescaler.com/">
-              <span className="font-bold text-2xl tracking-tight text-neutral-800">CodeScaler</span>
-            </a>
-          </div>
-
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-8 text-neutral-500 font-medium">
-            <a href="/" className="hover:text-blue-600 transition-colors">Roadmap</a>
-            <a href="/" className="hover:text-blue-600 transition-colors font-bold text-blue-600">Internship</a>
-            <a href="/CodeScaler_Industrial_Training_Curriculum.pdf"
-              download className="hover:text-blue-600 transition-colors">Download</a>
-                 <a href="/admission" className="hover:text-blue-600 transition-colors ">Admission</a>
-            <a href="/find" className="hover:text-blue-600 transition-colors ">Find Registation</a>
-            <a href="/contact"
-              className="px-5 py-2 rounded-full font-bold bg-neutral-900 text-white hover:bg-neutral-800 transition-all">
-              Contact Us
-            </a>
-          </div>
-
-          <button onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 text-neutral-600 hover:bg-neutral-100 rounded-xl transition-colors">
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
-
-        <AnimatePresence>
-          {isMenuOpen && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="md:hidden border-t border-neutral-100 bg-white overflow-hidden">
-              <div className="px-4 py-6 flex flex-col gap-4">
-                <a href="/" className="w-full py-4 px-6 rounded-2xl text-left font-bold text-neutral-500 hover:bg-neutral-50">Internship Roadmap</a>
-                <a href="/" className="w-full py-4 px-6 rounded-2xl text-left font-bold bg-blue-50 text-blue-600">Application Form</a>
-                <a href="/CodeScaler_Industrial_Training_Curriculum.pdf" download
-                  className="w-full py-4 px-6 rounded-2xl text-left font-bold text-neutral-500 hover:bg-neutral-50 hover:text-blue-600">Download Curriculum</a>
-                    <a href="/batch"    className="text-blue-600 font-semibold border-b-2 border-blue-600 pb-0.5">Batches</a>
-                    <a href="/admission" className="w-full py-4 px-6 rounded-2xl text-left font-bold transition-all cursor-pointer text-neutral-500 hover:bg-neutral-50 hover:text-blue-600 ">Admission</a>
-                <a href="/find" className="w-full py-4 px-6 rounded-2xl text-left font-bold transition-all cursor-pointer text-neutral-500 hover:bg-neutral-50 hover:text-blue-600">Find Registation</a>
-             
-                <a href="/contact"
-                  className="w-full py-4 px-6 bg-neutral-900 text-white rounded-2xl font-bold hover:bg-neutral-800 transition-all text-center">Contact Our Team</a>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </nav>
+      <Header active="find" />
 
       {/* Main */}
       <div className="max-w-2xl mx-auto px-4 py-12 md:py-20">
