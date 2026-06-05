@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+function normalizeIndianPhone(phone: string) {
+  const cleaned = phone.replace(/[\s\-()]/g, "");
+  if (!/^(\+91|0)?[6-9]\d{9}$/.test(cleaned)) return null;
+  return cleaned.replace(/^(\+91|0)/, "");
+}
+
 // ── POST /api/batches/book ───────────────────────────────
 export async function POST(req: Request) {
   try {
@@ -14,9 +20,10 @@ export async function POST(req: Request) {
         { status: 400 }
       );
 
-    if (!/^\d{10}$/.test(whatsappNo.replace(/\D/g, "")))
+    const normalizedPhone = normalizeIndianPhone(whatsappNo);
+    if (!normalizedPhone)
       return NextResponse.json(
-        { success: false, error: "WhatsApp number must be 10 digits." },
+        { success: false, error: "WhatsApp number must be a valid 10-digit Indian mobile number." },
         { status: 400 }
       );
 
@@ -48,13 +55,24 @@ export async function POST(req: Request) {
       );
 
     // ── Duplicate check ──────────────────────────────────
-    const existing = await prisma.bookedSeat.findUnique({
-      where: { email_batchId: { email, batchId } },
-    });
+    const [existingEmail, existingPhone] = await Promise.all([
+      prisma.bookedSeat.findUnique({
+        where: { email_batchId: { email, batchId } },
+      }),
+      prisma.bookedSeat.findFirst({
+        where: { whatsappNo: normalizedPhone, batchId },
+      }),
+    ]);
 
-    if (existing)
+    if (existingEmail)
       return NextResponse.json(
         { success: false, error: "You have already booked a seat in this batch." },
+        { status: 409 }
+      );
+
+    if (existingPhone)
+      return NextResponse.json(
+        { success: false, error: "This WhatsApp number has already booked a seat in this batch." },
         { status: 409 }
       );
 
@@ -63,7 +81,7 @@ export async function POST(req: Request) {
 
     const [booking] = await prisma.$transaction([
       prisma.bookedSeat.create({
-        data: { batchId, fullName, whatsappNo, email, college },
+        data: { batchId, fullName, whatsappNo: normalizedPhone, email, college },
       }),
       prisma.batch.update({
         where: { id: batchId },
@@ -83,7 +101,7 @@ export async function POST(req: Request) {
     // Race condition duplicate
     if (err?.code === "P2002")
       return NextResponse.json(
-        { success: false, error: "You have already booked a seat in this batch." },
+        { success: false, error: "This email or WhatsApp number has already booked a seat in this batch." },
         { status: 409 }
       );
 

@@ -127,5 +127,6 @@ model BookedSeat {
 
   // One student (by email) can book only one seat per batch
   @@unique([email, batchId])
+  @@unique([whatsappNo, batchId])
   @@index([batchId])
 }

@@ -146,6 +146,12 @@ function nextBatchStatus(status: BatchStatus, totalSeats: number, bookedSeats: n
   return status;
 }
 
+function normalizeIndianPhone(phone: string) {
+  const cleaned = phone.replace(/[\s\-()]/g, "");
+  if (!/^(\+91|0)?[6-9]\d{9}$/.test(cleaned)) return null;
+  return cleaned.replace(/^(\+91|0)/, "");
+}
+
 // ✅ PUT — Update Booking (student info + optional batch transfer + batch schedule)
 export async function PUT(req: NextRequest, context: Context) {
   try {
@@ -170,6 +176,14 @@ export async function PUT(req: NextRequest, context: Context) {
     if (!fullName || !whatsappNo || !email || !college) {
       return NextResponse.json(
         { success: false, error: "fullName, whatsappNo, email and college are required." },
+        { status: 400 }
+      );
+    }
+
+    const normalizedPhone = normalizeIndianPhone(whatsappNo);
+    if (!normalizedPhone) {
+      return NextResponse.json(
+        { success: false, error: "WhatsApp number must be a valid 10-digit Indian mobile number." },
         { status: 400 }
       );
     }
@@ -214,18 +228,33 @@ export async function PUT(req: NextRequest, context: Context) {
       }
     }
 
-    // ── Check unique [email, batchId] constraint ──────────
+    // ── Check unique email/phone per target batch ─────────
     // The student should not already exist in the target batch (unless it's the same booking)
-    const duplicate = await prisma.bookedSeat.findFirst({
-      where: {
-        email,
-        batchId: targetBatchId,
-        NOT: { id },
-      },
-    });
-    if (duplicate) {
+    const [duplicateEmail, duplicatePhone] = await Promise.all([
+      prisma.bookedSeat.findFirst({
+        where: {
+          email,
+          batchId: targetBatchId,
+          NOT: { id },
+        },
+      }),
+      prisma.bookedSeat.findFirst({
+        where: {
+          whatsappNo: normalizedPhone,
+          batchId: targetBatchId,
+          NOT: { id },
+        },
+      }),
+    ]);
+    if (duplicateEmail) {
       return NextResponse.json(
         { success: false, error: "This email is already booked for the target batch." },
+        { status: 409 }
+      );
+    }
+    if (duplicatePhone) {
+      return NextResponse.json(
+        { success: false, error: "This WhatsApp number is already booked for the target batch." },
         { status: 409 }
       );
     }
@@ -246,7 +275,7 @@ export async function PUT(req: NextRequest, context: Context) {
         where: { id },
         data: {
           fullName,
-          whatsappNo,
+          whatsappNo: normalizedPhone,
           email,
           college,
           ...(batchId ? { batchId } : {}),
