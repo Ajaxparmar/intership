@@ -1,18 +1,21 @@
-// app/api/admin/bookings/[id]/route.ts
+// app/api/batch/bookings/[id]/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// PUT /api/admin/bookings/:id  — edit a booking
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params
+// Updated Context type for Next.js 15+
+type Context = {
+  params: Promise<{ id: string }>;
+};
+
+// ✅ PUT — Update Booking
+export async function PUT(req: NextRequest, context: Context) {
+  try {
+    const { id } = await context.params;   // ← Await the promise
     const body = await req.json();
 
-    // Only allow editing these fields
     const { fullName, whatsappNo, email, college } = body;
 
     if (!fullName || !whatsappNo || !email || !college) {
@@ -22,28 +25,46 @@ export async function PUT(
       );
     }
 
-    // Check if new email+batchId combo already exists (for a different booking)
+    const bookingData = await prisma.bookedSeat.findUnique({
+      where: { id },
+    });
+
+    if (!bookingData) {
+      return NextResponse.json(
+        { success: false, error: "Booking not found." },
+        { status: 404 }
+      );
+    }
+
     const existing = await prisma.bookedSeat.findFirst({
       where: {
         email,
-        batchId: (await prisma.bookedSeat.findUnique({ where: { id } }))?.batchId,
+        batchId: bookingData.batchId,
         NOT: { id },
       },
     });
 
     if (existing) {
       return NextResponse.json(
-        { success: false, error: "This email is already booked for this batch." },
+        {
+          success: false,
+          error: "This email is already booked for this batch.",
+        },
         { status: 409 }
       );
     }
 
     const updated = await prisma.bookedSeat.update({
       where: { id },
-      data:  { fullName, whatsappNo, email, college },
+      data: { fullName, whatsappNo, email, college },
       include: {
         batch: {
-          select: { id: true, name: true, course: true, batchType: true },
+          select: {
+            id: true,
+            name: true,
+            course: true,
+            batchType: true,
+          },
         },
       },
     });
@@ -51,42 +72,57 @@ export async function PUT(
     return NextResponse.json({ success: true, booking: updated });
   } catch (err: any) {
     if (err.code === "P2025") {
-      return NextResponse.json({ success: false, error: "Booking not found." }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Booking not found." },
+        { status: 404 }
+      );
     }
-    console.error("[admin/bookings PUT]", err);
-    return NextResponse.json({ success: false, error: "Failed to update booking." }, { status: 500 });
+
+    console.error("[bookings PUT]", err);
+    return NextResponse.json(
+      { success: false, error: "Failed to update booking." },
+      { status: 500 }
+    );
   }
 }
 
-// DELETE /api/admin/bookings/:id  — delete a booking + decrement bookedSeats
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+// ✅ DELETE — Delete Booking + Decrement Seats
+export async function DELETE(req: NextRequest, context: Context) {
   try {
-    const { id } = params;
+    const { id } = await context.params;   // ← Await the promise
 
-    // Find the booking first so we know which batch to update
-    const booking = await prisma.bookedSeat.findUnique({ where: { id } });
+    const booking = await prisma.bookedSeat.findUnique({
+      where: { id },
+    });
+
     if (!booking) {
-      return NextResponse.json({ success: false, error: "Booking not found." }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Booking not found." },
+        { status: 404 }
+      );
     }
 
-    // Delete booking and decrement bookedSeats in one transaction
     await prisma.$transaction([
       prisma.bookedSeat.delete({ where: { id } }),
       prisma.batch.update({
         where: { id: booking.batchId },
-        data:  { bookedSeats: { decrement: 1 } },
+        data: { bookedSeats: { decrement: 1 } },
       }),
     ]);
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
     if (err.code === "P2025") {
-      return NextResponse.json({ success: false, error: "Booking not found." }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Booking not found." },
+        { status: 404 }
+      );
     }
-    console.error("[admin/bookings DELETE]", err);
-    return NextResponse.json({ success: false, error: "Failed to delete booking." }, { status: 500 });
+
+    console.error("[bookings DELETE]", err);
+    return NextResponse.json(
+      { success: false, error: "Failed to delete booking." },
+      { status: 500 }
+    );
   }
 }

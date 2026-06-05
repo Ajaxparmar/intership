@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { use, useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Users, Search, Trash2, Pencil, X, Check, ChevronLeft,
@@ -328,8 +328,13 @@ function StudentRow({
 }
 
 // ── Main Page ─────────────────────────────────────────────
-export default function BatchStudentsPage({ params }: { params: { batchId: string } }) {
-  const { batchId } = params;
+export default function BatchStudentsPage({
+  params,
+}: {
+  params: Promise<{ batchId: string }>;
+}) {
+  // ✅ Next.js 15 fix: unwrap the params Promise with React's `use()`
+  const { batchId } = use(params);
 
   const [batch,      setBatch]      = useState<Batch | null>(null);
   const [seats,      setSeats]      = useState<BookedSeat[]>([]);
@@ -504,9 +509,9 @@ export default function BatchStudentsPage({ params }: { params: { batchId: strin
                 {/* Right: seat stats */}
                 <div className="flex gap-5 shrink-0">
                   {[
-                    { label: "Total",    value: batch.totalSeats,  color: "text-slate-700"   },
-                    { label: "Booked",   value: batch.bookedSeats, color: "text-blue-600"    },
-                    { label: "Available",value: available,         color: "text-emerald-600" },
+                    { label: "Total",     value: batch.totalSeats,  color: "text-slate-700"   },
+                    { label: "Booked",    value: batch.bookedSeats, color: "text-blue-600"    },
+                    { label: "Available", value: available,         color: "text-emerald-600" },
                   ].map(s => (
                     <div key={s.label} className="text-center">
                       <p className={cn("text-2xl font-extrabold tabular-nums", s.color)}>{s.value}</p>
@@ -643,7 +648,6 @@ export default function BatchStudentsPage({ params }: { params: { batchId: strin
             onClose={() => setDelTarget(null)}
             onDelete={id => {
               setSeats(prev => prev.filter(s => s.id !== id));
-              // also decrement local batch counter
               setBatch(prev => prev ? { ...prev, bookedSeats: prev.bookedSeats - 1 } : prev);
               setDelTarget(null);
             }}
