@@ -131,13 +131,20 @@
 // app/api/batch/bookings/[id]/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { BatchStatus, PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 type Context = {
   params: Promise<{ id: string }>;
 };
+
+function nextBatchStatus(status: BatchStatus, totalSeats: number, bookedSeats: number): BatchStatus {
+  if (status === "COMPLETED") return status;
+  if (bookedSeats >= totalSeats) return "FULL";
+  if (status === "FULL") return "UPCOMING";
+  return status;
+}
 
 // ✅ PUT — Update Booking (student info + optional batch transfer + batch schedule)
 export async function PUT(req: NextRequest, context: Context) {
@@ -187,6 +194,24 @@ export async function PUT(req: NextRequest, context: Context) {
           { status: 404 }
         );
       }
+
+      if (destBatch.status === "COMPLETED") {
+        return NextResponse.json(
+          { success: false, error: "Target batch has already completed." },
+          { status: 409 }
+        );
+      }
+
+      const destinationBookedCount = await prisma.bookedSeat.count({
+        where: { batchId },
+      });
+
+      if (destinationBookedCount >= destBatch.totalSeats) {
+        return NextResponse.json(
+          { success: false, error: "Target batch is full. No seats available." },
+          { status: 409 }
+        );
+      }
     }
 
     // ── Check unique [email, batchId] constraint ──────────
@@ -211,6 +236,8 @@ export async function PUT(req: NextRequest, context: Context) {
     if (timingEnd   !== undefined) batchScheduleUpdate.timingEnd   = timingEnd;
     if (startDate   !== undefined) batchScheduleUpdate.startDate   = startDate;
     if (endDate     !== undefined) batchScheduleUpdate.endDate     = endDate;
+
+    const isBatchTransfer = targetBatchId !== existing.batchId;
 
     // ── Run updates in a transaction ──────────────────────
     const [updatedBooking] = await prisma.$transaction(async (tx) => {
@@ -242,7 +269,40 @@ export async function PUT(req: NextRequest, context: Context) {
         },
       });
 
-      // 2. Update the batch schedule (if any schedule fields were provided)
+      // 2. Keep Batch.bookedSeats in sync when the student moves batches.
+      if (isBatchTransfer) {
+        const affectedBatchIds = [existing.batchId, targetBatchId];
+        const affectedBatches = await tx.batch.findMany({
+          where: { id: { in: affectedBatchIds } },
+          select: {
+            id: true,
+            status: true,
+            totalSeats: true,
+          },
+        });
+
+        await Promise.all(
+          affectedBatches.map(async (affectedBatch) => {
+            const bookedSeats = await tx.bookedSeat.count({
+              where: { batchId: affectedBatch.id },
+            });
+
+            await tx.batch.update({
+              where: { id: affectedBatch.id },
+              data: {
+                bookedSeats,
+                status: nextBatchStatus(
+                  affectedBatch.status,
+                  affectedBatch.totalSeats,
+                  bookedSeats
+                ),
+              },
+            });
+          })
+        );
+      }
+
+      // 3. Update the batch schedule (if any schedule fields were provided)
       if (Object.keys(batchScheduleUpdate).length > 0) {
         await tx.batch.update({
           where: { id: targetBatchId },
