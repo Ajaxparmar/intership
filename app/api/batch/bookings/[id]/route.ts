@@ -7,10 +7,9 @@ const prisma = new PrismaClient();
 // PUT /api/admin/bookings/:id  — edit a booking
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const { id } = params;
+  const { id } = await params
     const body = await req.json();
 
     // Only allow editing these fields
