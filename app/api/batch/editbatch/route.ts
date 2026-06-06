@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
+import { BatchStatus, BatchType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+
+const BATCH_TYPES = new Set<BatchType>(["ONLINE", "OFFLINE", "HYBRID"]);
+const BATCH_STATUSES = new Set<BatchStatus>(["UPCOMING", "ONGOING", "FULL", "COMPLETED"]);
 
 // ── GET /api/batch/editbatch ────────────────────────────────
 export async function GET(
@@ -28,7 +32,21 @@ export async function GET(
 export async function PATCH(req: Request) {
   try {
     const body = await req.json();
-    const { id, status, instructor, description, totalSeats } = body;
+    const {
+      id,
+      name,
+      course,
+      batchType,
+      instructor,
+      startDate,
+      endDate,
+      timingStart,
+      timingEnd,
+      days,
+      totalSeats,
+      status,
+      description,
+    } = body;
 
     if (!id) {
       return NextResponse.json(
@@ -45,30 +63,66 @@ export async function PATCH(req: Request) {
       );
     }
 
-    // Validate totalSeats if provided
-    if (totalSeats !== undefined) {
-      const newTotal = Number(totalSeats);
-      if (isNaN(newTotal) || newTotal < 1) {
-        return NextResponse.json(
-          { success: false, error: "Total seats must be at least 1." },
-          { status: 400 }
-        );
-      }
-      if (newTotal < existing.bookedSeats) {
-        return NextResponse.json(
-          { success: false, error: `Cannot set seats below already booked count (${existing.bookedSeats}).` },
-          { status: 400 }
-        );
-      }
+    if (!name?.trim() || !course?.trim() || !batchType || !startDate || !endDate || !timingStart || !timingEnd) {
+      return NextResponse.json(
+        { success: false, error: "Name, course, type, dates, and timings are required." },
+        { status: 400 }
+      );
     }
+
+    if (!BATCH_TYPES.has(batchType)) {
+      return NextResponse.json({ success: false, error: "Invalid batch type." }, { status: 400 });
+    }
+
+    if (!BATCH_STATUSES.has(status)) {
+      return NextResponse.json({ success: false, error: "Invalid batch status." }, { status: 400 });
+    }
+
+    if (endDate <= startDate) {
+      return NextResponse.json({ success: false, error: "End date must be after start date." }, { status: 400 });
+    }
+
+    if (timingEnd <= timingStart) {
+      return NextResponse.json({ success: false, error: "End time must be after start time." }, { status: 400 });
+    }
+
+    if (!Array.isArray(days) || days.length === 0) {
+      return NextResponse.json({ success: false, error: "Select at least one class day." }, { status: 400 });
+    }
+
+    const newTotal = Number(totalSeats);
+    if (!Number.isInteger(newTotal) || newTotal < 1) {
+      return NextResponse.json(
+        { success: false, error: "Total seats must be a whole number of at least 1." },
+        { status: 400 }
+      );
+    }
+
+    if (newTotal < existing.bookedSeats) {
+      return NextResponse.json(
+        { success: false, error: `Cannot set seats below already booked count (${existing.bookedSeats}).` },
+        { status: 400 }
+      );
+    }
+
+    const nextStatus: BatchStatus =
+      existing.bookedSeats >= newTotal && status !== "COMPLETED" ? "FULL" : status;
 
     const batch = await prisma.batch.update({
       where: { id },
       data: {
-        ...(status !== undefined && { status }),
-        ...(instructor !== undefined && { instructor: instructor?.trim() || null }),
-        ...(description !== undefined && { description: description?.trim() || null }),
-        ...(totalSeats !== undefined && { totalSeats: Number(totalSeats) }),
+        name: name.trim(),
+        course: course.trim(),
+        batchType,
+        instructor: instructor?.trim() || null,
+        startDate,
+        endDate,
+        timingStart,
+        timingEnd,
+        days,
+        totalSeats: newTotal,
+        status: nextStatus,
+        description: description?.trim() || null,
       },
     });
 

@@ -43,7 +43,7 @@ export function JsonLd() {
       inLanguage: "en",
       offers: {
         "@type": "Offer",
-        price: "4999",
+        price: "3999",
         priceCurrency: "INR",
         availability: "https://schema.org/InStock",
         validThrough: "2026-05-01",
@@ -85,7 +85,7 @@ export function JsonLd() {
           name: "What is the fee for the internship?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "The program fee is ₹4999 (GST included) for 1 month, 45 days, and 2 month tracks.",
+            text: "The program fee is ₹3999 (GST included) for 1 month, 45 days, and 2 month tracks.",
           },
         },
         {

@@ -71,9 +71,9 @@ const INITIAL_DATA: FormData = {
 };
 
 const DURATION_PRICES: Record<string, number> = {
-  "1 month": 4999,
-  "45 days": 4999,
-  "2 month": 4999,
+  "1 month": 3999,
+  "45 days": 3999,
+  "2 month": 3999,
 };
 
 export default function App() {

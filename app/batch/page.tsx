@@ -1608,7 +1608,10 @@ export default function BatchesPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40">
 
-      <Header active="batches" />
+      <Header
+        active="batches"
+        extraLinks={[{ key: "manageBatches", label: "Manage Batches", href: "/batch/manage" }]}
+      />
 
       {/* Body */}
       <div className="max-w-6xl mx-auto px-4 py-10">

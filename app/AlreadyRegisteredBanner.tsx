@@ -25,7 +25,7 @@ export default function AlreadyRegisteredBanner() {
   const [error, setError] = useState("");
   const [data, setData] = useState<RegistrationData | null>(null);
 
-  const FEE = 4999;
+  const FEE = 3999;
   const UPI = `upi://pay?pa=q566002417@ybl&pn=CodeScaler&am=${FEE}&cu=INR&tn=InternshipFee`;
 
   const handleLookup = async () => {
