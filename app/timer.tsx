@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 
-const DEADLINE = new Date("2026-05-20T23:59:59");
-const BATCH_START = new Date("2026-04-01T00:00:00");
+const DEADLINE = new Date("2026-06-15T23:59:59");
+const BATCH_START = new Date("2026-06-01T00:00:00");
 const TOTAL_MS = DEADLINE.getTime() - BATCH_START.getTime();
 
 function pad(n: number) {
