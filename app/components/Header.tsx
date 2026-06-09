@@ -62,6 +62,28 @@ export default function Header({
   };
 
   const links: HeaderLink[] = [
+
+    {
+      key: "internship",
+      label: "Internship",
+      mobileLabel: "Application Form",
+      href: "/",
+      onClick: onInternshipClick,
+    },
+    // { key: "admission", label: "Admission", href: "/admission" },
+    { key: "batches", label: "Batches", href: "/batch" },
+    // { key: "find", label: "Find Registration", href: "/find" },
+    { key: "role-login", label: "Login", href: "/login" },
+    // ...(showDownload
+    //   ? [{
+    //       key: "download",
+    //       label: "Download",
+    //       mobileLabel: "Download Curriculum",
+    //       href: CURRICULUM_URL,
+    //       download: "CodeScaler_Industrial_Training_Curriculum.pdf",
+    //     }]
+    //   : []),
+    // ...extraLinks,
     {
       key: "roadmap",
       label: "Roadmap",
@@ -70,27 +92,6 @@ export default function Header({
       onClick: onRoadmapClick,
     },
     {
-      key: "internship",
-      label: "Internship",
-      mobileLabel: "Application Form",
-      href: "/",
-      onClick: onInternshipClick,
-    },
-    { key: "admission", label: "Admission", href: "/admission" },
-    { key: "batches", label: "Batches", href: "/batch" },
-    { key: "find", label: "Find Registration", href: "/find" },
-    { key: "role-login", label: "Login", href: "/login" },
-    ...(showDownload
-      ? [{
-          key: "download",
-          label: "Download",
-          mobileLabel: "Download Curriculum",
-          href: CURRICULUM_URL,
-          download: "CodeScaler_Industrial_Training_Curriculum.pdf",
-        }]
-      : []),
-    ...extraLinks,
-    {
       key: "contact",
       label: "Contact Us",
       mobileLabel: "Contact Our Team",
@@ -98,6 +99,7 @@ export default function Header({
       onClick: onContactClick,
       primary: true,
     },
+    
   ];
 
   const renderDesktopLink = (link: HeaderLink) => {
