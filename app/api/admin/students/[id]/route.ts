@@ -56,3 +56,42 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "Could not update student." }, { status: 500 });
   }
 }
+
+export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params;
+    const student = await prisma.student.findUnique({
+      where: { id },
+      select: { id: true, fullName: true, userId: true },
+    });
+
+    if (!student) {
+      return NextResponse.json({ error: "Student not found." }, { status: 404 });
+    }
+
+    const leadGroupCount = await prisma.studentGroup.count({ where: { teamLeadId: id } });
+    if (leadGroupCount > 0) {
+      return NextResponse.json(
+        { error: "Assign another team lead to this student's groups before deleting the student." },
+        { status: 409 }
+      );
+    }
+
+    await Promise.all([
+      prisma.studentAttendance.deleteMany({ where: { studentId: id } }),
+      prisma.offerLetter.deleteMany({ where: { studentId: id } }),
+      prisma.leaveRequest.deleteMany({ where: { studentId: id } }),
+      prisma.feeReceipt.deleteMany({ where: { studentId: id } }),
+    ]);
+
+    await prisma.student.delete({ where: { id } });
+    if (student.userId) {
+      await prisma.user.deleteMany({ where: { id: student.userId } });
+    }
+
+    return NextResponse.json({ success: true, deletedStudent: student.fullName });
+  } catch (error) {
+    console.error("Delete student error:", error);
+    return NextResponse.json({ error: "Could not delete student." }, { status: 500 });
+  }
+}

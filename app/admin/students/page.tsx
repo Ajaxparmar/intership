@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarCheck, FileText, IndianRupee, Pencil, PlusCircle, Search, User, X } from "lucide-react";
+import { AlertTriangle, CalendarCheck, FileText, IndianRupee, Pencil, PlusCircle, Search, Trash2, User, X } from "lucide-react";
 
 type Attendance = {
   id: string;
@@ -48,6 +48,9 @@ export default function StudentsTablePage() {
   const [editForm, setEditForm] = useState(initialEditForm);
   const [editMessage, setEditMessage] = useState("");
   const [saving, setSaving] = useState(false);
+  const [deletingStudent, setDeletingStudent] = useState<Student | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteMessage, setDeleteMessage] = useState("");
 
   const loadStudents = async () => {
     setLoading(true);
@@ -136,6 +139,23 @@ export default function StudentsTablePage() {
       setEditMessage(error instanceof Error ? error.message : "Could not update student.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const deleteStudent = async () => {
+    if (!deletingStudent) return;
+    setDeleting(true);
+    setDeleteMessage("");
+    try {
+      const response = await fetch(`/api/admin/students/${deletingStudent.id}`, { method: "DELETE" });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not delete student.");
+      setDeletingStudent(null);
+      await loadStudents();
+    } catch (error) {
+      setDeleteMessage(error instanceof Error ? error.message : "Could not delete student.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -255,9 +275,14 @@ export default function StudentsTablePage() {
                       </span>
                     </td>
                     <td className="px-5 py-4">
-                      <button onClick={() => openEdit(student)} className="inline-flex items-center gap-1 rounded-xl bg-blue-600 px-3 py-2 text-xs font-black text-white hover:bg-blue-700">
-                        <Pencil size={13} /> Edit
-                      </button>
+                      <div className="flex flex-wrap gap-2">
+                        <button onClick={() => openEdit(student)} className="inline-flex items-center gap-1 rounded-xl bg-blue-600 px-3 py-2 text-xs font-black text-white hover:bg-blue-700">
+                          <Pencil size={13} /> Edit
+                        </button>
+                        <button onClick={() => { setDeletingStudent(student); setDeleteMessage(""); }} className="inline-flex items-center gap-1 rounded-xl bg-red-50 px-3 py-2 text-xs font-black text-red-600 hover:bg-red-100">
+                          <Trash2 size={13} /> Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -311,6 +336,30 @@ export default function StudentsTablePage() {
               {editMessage && <p className="rounded-xl bg-red-50 p-3 text-sm font-bold text-red-700">{editMessage}</p>}
               <button disabled={saving || !editForm.batchId} onClick={saveStudent} className="w-full rounded-2xl bg-blue-600 py-3 font-black text-white hover:bg-blue-700 disabled:opacity-50">
                 {saving ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {deletingStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm">
+          <section className="w-full max-w-md rounded-3xl bg-white p-7 text-center shadow-2xl">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-red-600">
+              <AlertTriangle size={30} />
+            </div>
+            <h2 className="mt-5 text-2xl font-black text-slate-900">Delete student?</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              This will permanently delete <strong className="text-slate-800">{deletingStudent.fullName}</strong>, their login account,
+              attendance, fee receipts, offer letters, and leave requests.
+            </p>
+            {deleteMessage && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm font-bold text-red-700">{deleteMessage}</p>}
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <button disabled={deleting} onClick={() => setDeletingStudent(null)} className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-black text-slate-600 hover:bg-slate-50 disabled:opacity-50">
+                Cancel
+              </button>
+              <button disabled={deleting} onClick={deleteStudent} className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-3 text-sm font-black text-white hover:bg-red-700 disabled:opacity-50">
+                <Trash2 size={15} /> {deleting ? "Deleting..." : "Delete Permanently"}
               </button>
             </div>
           </section>
