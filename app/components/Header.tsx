@@ -22,7 +22,9 @@ type HeaderKey =
   | "download"
   | "contact"
   | "bookings"
-  | "addBatch";
+  | "addBatch"
+  | "student-login"
+  | "role-login";
 
 interface HeaderLink {
   key: HeaderKey | string;
@@ -77,6 +79,7 @@ export default function Header({
     { key: "admission", label: "Admission", href: "/admission" },
     { key: "batches", label: "Batches", href: "/batch" },
     { key: "find", label: "Find Registration", href: "/find" },
+    { key: "role-login", label: "Login", href: "/login" },
     ...(showDownload
       ? [{
           key: "download",

@@ -68,6 +68,164 @@ model Admission {
   @@index([rollNo, college])
 }
 
+enum FeeStatus {
+  PENDING
+  PARTIAL
+  PAID
+  OVERDUE
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LEAVE
+}
+
+enum OfferLetterStatus {
+  NOT_ISSUED
+  ISSUED
+  ACCEPTED
+}
+
+enum UserRole {
+  ADMIN
+  STUDENT
+  TEAMLEAD
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  fullName        String
+  phone           String   @unique
+  email           String?
+  passwordHash    String
+  role            UserRole
+  student         Student?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([role])
+}
+
+model Student {
+  id              String            @id @default(auto()) @map("_id") @db.ObjectId
+
+  fullName        String
+  phone           String            @unique
+  email           String?
+  address         String?
+  fatherName      String?
+  collegeUniversity String?
+  profileImage    String?
+  passwordHash    String
+  userId          String?           @unique @db.ObjectId
+  user            User?             @relation(fields: [userId], references: [id])
+
+  courseName      String
+  batchId         String?           @db.ObjectId
+  batch           Batch?            @relation(fields: [batchId], references: [id])
+  batchName       String?
+  duration        String?
+  startDate       String?
+  endDate         String?
+
+  totalFee        Float
+  paidFee         Float             @default(0)
+  feeStatus       FeeStatus         @default(PENDING)
+  nextDueDate     String?
+  feeNotes        String?
+  groupId         String?           @db.ObjectId
+  group           StudentGroup?     @relation("GroupMembers", fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  leadGroups      StudentGroup[]    @relation("GroupTeamLead")
+
+  attendance      StudentAttendance[]
+  offerLetters    OfferLetter[]
+  leaveRequests   LeaveRequest[]
+  feeReceipts     FeeReceipt[]
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([courseName])
+  @@index([batchId])
+  @@index([groupId])
+}
+
+model StudentGroup {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  name            String    @unique
+  description     String?
+  teamLeadId      String    @db.ObjectId
+  teamLead        Student   @relation("GroupTeamLead", fields: [teamLeadId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  students        Student[] @relation("GroupMembers")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([teamLeadId])
+}
+
+model StudentAttendance {
+  id              String            @id @default(auto()) @map("_id") @db.ObjectId
+  studentId       String            @db.ObjectId
+  student         Student           @relation(fields: [studentId], references: [id])
+  date            String
+  status          AttendanceStatus
+  remarks         String?
+  createdAt       DateTime          @default(now())
+
+  @@unique([studentId, date])
+  @@index([studentId])
+}
+
+model OfferLetter {
+  id              String            @id @default(auto()) @map("_id") @db.ObjectId
+  studentId       String            @db.ObjectId
+  student         Student           @relation(fields: [studentId], references: [id])
+  title           String
+  issueDate       String
+  status          OfferLetterStatus @default(ISSUED)
+  letterUrl       String?
+  notes           String?
+  createdAt       DateTime          @default(now())
+
+  @@index([studentId])
+}
+
+model LeaveRequest {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  studentId       String      @db.ObjectId
+  student         Student     @relation(fields: [studentId], references: [id])
+  fromDate        String
+  toDate          String
+  reason          String
+  status          LeaveStatus @default(PENDING)
+  reviewedAt      DateTime?
+  createdAt       DateTime    @default(now())
+
+  @@index([studentId, status])
+}
+
+model FeeReceipt {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  studentId       String   @db.ObjectId
+  student         Student  @relation(fields: [studentId], references: [id])
+  receiptNo       String   @unique
+  amount          Float
+  paidOn          String
+  paymentMode     String?
+  receiptUrl      String?
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  @@index([studentId])
+}
+
 
 
 enum BatchType {
@@ -104,6 +262,7 @@ model Batch {
   description  String?
 
   bookings     BookedSeat[]
+  students     Student[]
 
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
