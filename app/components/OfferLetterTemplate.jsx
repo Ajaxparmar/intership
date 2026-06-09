@@ -7,10 +7,10 @@ import React from 'react';
  ╠══════════════════════════════════════════════════════════════════╣
  ║  PROPS (all required unless marked optional):                   ║
  ║                                                                  ║
- ║  refSequence  → number/string e.g. 1 → generates               ║
+ ║  refSequence  → number/string e.g. 1 → generates               ║ƒ
  ║                 CS/INT/OFF/2026/001 (auto zero-pads to 3 digits) ║
  ║  name         → Student full name                               ║
- ║  rollNumber   → University roll number                          ║
+ ║  phoneNumber   → University phone number                          ║
  ║  course       → Course / Branch name                            ║
  ║  university   → University name (used in T&C clause too)        ║
  ║  domain       → 'Full Stack Web Development' | 'Data Analytics' ║
@@ -35,7 +35,7 @@ import React from 'react';
  ║  <OfferLetterTemplate                                            ║
  ║    refSequence={1}                                               ║
  ║    name="Amarjeet"                                               ║
- ║    rollNumber="25MBA20084"                                       ║
+ ║    phoneNumber="25MBA20084"                                       ║
  ║    course="MBA (Business Analytics)"                             ║
  ║    university="Chandigarh University"                            ║
  ║    domain="Data Analytics"                                       ║
@@ -377,7 +377,7 @@ const WHAT_YOU_GET = [
 const OfferLetterTemplate = ({
   refSequence   = '001',
   name          = '',
-  rollNumber    = '',
+  phoneNumber    = '',
   course        = '',
   university    = '',
   domain        = 'Full Stack Web Development',  // or 'Data Analytics'
@@ -436,8 +436,8 @@ const OfferLetterTemplate = ({
               <td className="ol-td-value">{name}</td>
             </tr>
             <tr>
-              <td className="ol-td-label">Roll Number</td>
-              <td className="ol-td-value">{rollNumber}</td>
+              <td className="ol-td-label">Phone Number</td>
+              <td className="ol-td-value">{phoneNumber}</td>
             </tr>
             <tr>
               <td className="ol-td-label">Course / Branch</td>
