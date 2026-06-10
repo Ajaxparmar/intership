@@ -663,6 +663,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import {
   BookOpen, Clock, Calendar, Users, Monitor, Building2,
@@ -1076,10 +1077,10 @@ export default function AddBatchPage() {
                 <p className="text-blue-100 text-sm">"{form.name}" is now live for students to book.</p>
               </div>
               <div className="p-6 flex flex-col gap-3">
-                <a href="/admin/batches/manage"
+                <Link href="/admin/batches/manage"
                   className="block w-full py-3 bg-blue-600 text-white rounded-xl font-bold text-center hover:bg-blue-700 transition text-sm">
                   View All Batches
-                </a>
+                </Link>
                 <button onClick={() => { setSuccess(false); setForm(INIT); }}
                   className="w-full py-3 border border-slate-200 rounded-xl font-semibold text-slate-600 hover:bg-slate-50 text-sm transition">
                   Add Another Batch

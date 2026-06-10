@@ -58,13 +58,13 @@ export function receiptDocument(receipt: ReceiptDocumentData) {
   );
 }
 
-export function offerDocument(offer: OfferDocumentData) {
+export function offerDocument(offer: OfferDocumentData, refSequence: number) {
   const student = offer.student;
   return (
     <OfferLetterTemplate
-      refSequence={sequence(offer.id)}
+      refSequence={String(refSequence)}
       name={student.fullName}
-      rollNumber={student.phone}
+      phoneNumber={student.phone}
       course={student.courseName}
       university={student.collegeUniversity || ""}
       domain={student.courseName}

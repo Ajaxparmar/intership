@@ -10,5 +10,12 @@ export default async function OfferLetterPage({ params }: { params: Promise<{ id
   });
 
   if (!offer) notFound();
-  return offerDocument(offer);
+
+  const refSequence = await prisma.offerLetter.count({
+    where: {
+      createdAt: { lte: offer.createdAt },
+    },
+  });
+
+  return offerDocument(offer, refSequence);
 }

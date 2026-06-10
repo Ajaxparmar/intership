@@ -10,6 +10,8 @@ type Student = {
   phone: string;
   email?: string;
   fatherName?: string;
+  address?: string;
+  collegeUniversity?: string;
   profileImage?: string;
   courseName: string;
   batchName?: string;
@@ -109,7 +111,27 @@ export default function StudentLoginPage() {
               </button>
             </section>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              <section className="bg-white rounded-3xl border border-slate-200 p-6">
+                <h2 className="text-xl font-black text-slate-900 flex items-center gap-2 mb-5">
+                  <User size={20} className="text-blue-600" /> Student Profile
+                </h2>
+                <div className="mx-auto mb-5 flex h-44 w-44 items-center justify-center overflow-hidden rounded-3xl bg-slate-100 text-slate-400 ring-4 ring-blue-50">
+                  {student.profileImage ? (
+                    <img src={student.profileImage} alt={`${student.fullName} profile`} className="h-full w-full object-cover" />
+                  ) : (
+                    <User size={54} />
+                  )}
+                </div>
+                <div className="space-y-3">
+                  <Info label="Name" value={student.fullName} />
+                  <Info label="Phone Number" value={student.phone} />
+                  <Info label="Email" value={student.email || "Not added"} />
+                  <Info label="College / University" value={student.collegeUniversity || "Not added"} />
+                  <Info label="Address" value={student.address || "Not added"} />
+                </div>
+              </section>
+
               <section className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-6">
                 <h2 className="text-xl font-black text-slate-900 flex items-center gap-2 mb-5">
                   <BookOpen size={20} className="text-blue-600" /> Course Details

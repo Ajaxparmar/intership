@@ -10,7 +10,7 @@ import React from 'react';
  ║  refSequence  → number/string e.g. 1 → generates               ║ƒ
  ║                 CS/INT/OFF/2026/001 (auto zero-pads to 3 digits) ║
  ║  name         → Student full name                               ║
- ║  phoneNumber   → University phone number                          ║
+ ║  phoneNumber  → Student phone number                            ║
  ║  course       → Course / Branch name                            ║
  ║  university   → University name (used in T&C clause too)        ║
  ║  domain       → 'Full Stack Web Development' | 'Data Analytics' ║
@@ -35,7 +35,7 @@ import React from 'react';
  ║  <OfferLetterTemplate                                            ║
  ║    refSequence={1}                                               ║
  ║    name="Amarjeet"                                               ║
- ║    phoneNumber="25MBA20084"                                       ║
+ ║    phoneNumber="9588161422"                                     ║
  ║    course="MBA (Business Analytics)"                             ║
  ║    university="Chandigarh University"                            ║
  ║    domain="Data Analytics"                                       ║
@@ -377,7 +377,7 @@ const WHAT_YOU_GET = [
 const OfferLetterTemplate = ({
   refSequence   = '001',
   name          = '',
-  phoneNumber    = '',
+  phoneNumber   = '',
   course        = '',
   university    = '',
   domain        = 'Full Stack Web Development',  // or 'Data Analytics'

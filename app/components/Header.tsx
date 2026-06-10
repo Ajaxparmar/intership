@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { Menu, X } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
@@ -104,6 +105,7 @@ export default function Header({
 
   const renderDesktopLink = (link: HeaderLink) => {
     const isActive = active === link.key;
+    const href = link.href ?? "#";
     const className = link.primary
       ? cn(
           "px-5 py-2 rounded-full transition-all font-bold",
@@ -122,8 +124,16 @@ export default function Header({
       );
     }
 
+    if (!link.download && href.startsWith("/")) {
+      return (
+        <Link key={link.key} href={href} className={className}>
+          {link.label}
+        </Link>
+      );
+    }
+
     return (
-      <a key={link.key} href={link.href} download={link.download} className={className}>
+      <a key={link.key} href={href} download={link.download} className={className}>
         {link.label}
       </a>
     );
@@ -131,6 +141,7 @@ export default function Header({
 
   const renderMobileLink = (link: HeaderLink) => {
     const isActive = active === link.key;
+    const href = link.href ?? "#";
     const className = link.primary
       ? "w-full py-4 px-6 bg-neutral-900 text-white rounded-2xl font-bold hover:bg-neutral-800 transition-all text-center"
       : cn(
@@ -146,8 +157,16 @@ export default function Header({
       );
     }
 
+    if (!link.download && href.startsWith("/")) {
+      return (
+        <Link key={link.key} href={href} onClick={closeMenu} className={className}>
+          {link.mobileLabel ?? link.label}
+        </Link>
+      );
+    }
+
     return (
-      <a key={link.key} href={link.href} download={link.download} onClick={closeMenu} className={className}>
+      <a key={link.key} href={href} download={link.download} onClick={closeMenu} className={className}>
         {link.mobileLabel ?? link.label}
       </a>
     );
@@ -167,9 +186,9 @@ export default function Header({
               }}
             />
           </div>
-          <a href="#">
+          <Link href="/">
             <span className="font-bold text-2xl tracking-tight text-neutral-800">CodeScaler</span>
-          </a>
+          </Link>
         </div>
 
         <div className="hidden md:flex items-center gap-8 text-neutral-500 font-medium">
