@@ -128,6 +128,7 @@ export default function AdminDashboardPage() {
           <Link href="/admin/batches/add" className="rounded-xl bg-blue-500/50 px-4 py-2.5 text-sm font-black text-white ring-1 ring-white/30">Add Batch</Link>
           <Link href="/admin/students" className="rounded-xl bg-blue-500/50 px-4 py-2.5 text-sm font-black text-white ring-1 ring-white/30">Manage Students</Link>
           <Link href="/admin/groups" className="rounded-xl bg-blue-500/50 px-4 py-2.5 text-sm font-black text-white ring-1 ring-white/30">Manage Groups</Link>
+          <Link href="/admin/leaves" className="rounded-xl bg-blue-500/50 px-4 py-2.5 text-sm font-black text-white ring-1 ring-white/30">Review Leave Requests</Link>
         </div>
       </section>
     </div>

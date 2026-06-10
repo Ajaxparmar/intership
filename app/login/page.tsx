@@ -1,6 +1,6 @@
 "use client";
 
-import React, { FormEvent, useState } from "react";
+import React, { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import Header from "@/app/components/Header";
 import { CalendarCheck, Download, ExternalLink, FileText, GraduationCap, IndianRupee, Lock, LogOut, Phone, ShieldCheck, UserCog, Users } from "lucide-react";
@@ -9,6 +9,7 @@ type Attendance = { id: string; date: string; status: "PRESENT" | "ABSENT" | "LE
 type Leave = { id: string; fromDate: string; toDate: string; reason: string; status: string };
 type Student = {
   id: string; fullName: string; phone: string; courseName: string; batchName?: string; totalFee: number; paidFee: number;
+  profileImage?: string;
   attendance: Attendance[]; leaveRequests: Leave[];
   feeReceipts: { id: string; receiptNo: string; amount: number; paidOn: string; paymentMode?: string; receiptUrl?: string }[];
   offerLetters: { id: string; title: string; issueDate: string; letterUrl?: string }[];
@@ -18,6 +19,7 @@ type Group = { id: string; name: string; students: Student[] };
 type Session = { id: string; fullName: string; phone: string; role: "ADMIN" | "STUDENT" | "TEAMLEAD"; student?: Student; leadGroups: Group[] };
 type LoginRole = Session["role"];
 
+const ROLE_SESSION_KEY = "codescaler-role-session";
 const today = new Date().toISOString().slice(0, 10);
 const roles: { value: LoginRole; label: string; description: string; icon: React.ReactNode }[] = [
   { value: "ADMIN", label: "Admin", description: "Manage students, fees, batches, and groups.", icon: <ShieldCheck size={24} /> },
@@ -32,10 +34,25 @@ export default function RoleLoginPage() {
   const [session, setSession] = useState<Session | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [restoringSession, setRestoringSession] = useState(true);
   const [attendanceDate, setAttendanceDate] = useState(today);
   const [leave, setLeave] = useState({ fromDate: "", toDate: "", reason: "" });
+  const [leaveMessage, setLeaveMessage] = useState("");
+  const [applyingLeave, setApplyingLeave] = useState(false);
+
+  useEffect(() => {
+    try {
+      const savedSession = window.localStorage.getItem(ROLE_SESSION_KEY);
+      if (savedSession) setSession(JSON.parse(savedSession));
+    } catch {
+      window.localStorage.removeItem(ROLE_SESSION_KEY);
+    } finally {
+      setRestoringSession(false);
+    }
+  }, []);
 
   const logout = () => {
+    window.localStorage.removeItem(ROLE_SESSION_KEY);
     setSession(null);
     setRole(null);
     setPhone("");
@@ -54,6 +71,7 @@ export default function RoleLoginPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Login failed.");
       setSession(data.user);
+      window.localStorage.setItem(ROLE_SESSION_KEY, JSON.stringify(data.user));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed.");
     } finally {
@@ -80,21 +98,43 @@ export default function RoleLoginPage() {
   const applyLeave = async (event: FormEvent) => {
     event.preventDefault();
     if (!session?.student) return;
-    const res = await fetch("/api/student/leave", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ studentId: session.student.id, ...leave }),
-    });
-    const data = await res.json();
-    if (!res.ok) return setError(data.error || "Could not apply for leave.");
-    setLeave({ fromDate: "", toDate: "", reason: "" });
-    await login();
+    setApplyingLeave(true);
+    setLeaveMessage("");
+    try {
+      const res = await fetch("/api/student/leave", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId: session.student.id, ...leave }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Could not apply for leave.");
+
+      const updatedSession = {
+        ...session,
+        student: {
+          ...session.student,
+          leaveRequests: [data.leave, ...session.student.leaveRequests],
+        },
+      };
+      setSession(updatedSession);
+      window.localStorage.setItem(ROLE_SESSION_KEY, JSON.stringify(updatedSession));
+      setLeave({ fromDate: "", toDate: "", reason: "" });
+      setLeaveMessage("Leave request submitted successfully.");
+    } catch (error) {
+      setLeaveMessage(error instanceof Error ? error.message : "Could not apply for leave.");
+    } finally {
+      setApplyingLeave(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-slate-50">
       <Header active="role-login" />
       <main className="mx-auto max-w-7xl px-4 py-10">
-        {!session ? (
+        {restoringSession ? (
+          <div className="mx-auto max-w-2xl rounded-3xl border border-slate-200 bg-white p-8 text-center font-bold text-slate-500 shadow-xl shadow-slate-200/70">
+            Restoring your session...
+          </div>
+        ) : !session ? (
           <form onSubmit={login} className="mx-auto max-w-2xl space-y-6 rounded-3xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/70">
             <div className="text-center">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-blue-600"><ShieldCheck size={30} /></div>
@@ -136,7 +176,20 @@ export default function RoleLoginPage() {
         ) : (
           <div className="space-y-6">
             <section className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:flex-row md:items-center md:justify-between">
-              <div><p className="text-xs font-black uppercase tracking-widest text-blue-600">{session.role}</p><h1 className="text-3xl font-black">{session.fullName}</h1><p className="text-sm text-slate-500">{session.phone}</p></div>
+              <div className="flex items-center gap-4">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-blue-50 text-blue-600">
+                  {session.student?.profileImage ? (
+                    <img src={session.student.profileImage} alt={`${session.fullName} profile`} className="h-full w-full object-cover" />
+                  ) : (
+                    <GraduationCap size={32} />
+                  )}
+                </div>
+                <div>
+                  <p className="text-xs font-black uppercase tracking-widest text-blue-600">{session.role}</p>
+                  <h1 className="text-3xl font-black">{session.fullName}</h1>
+                  <p className="text-sm text-slate-500">{session.phone}</p>
+                </div>
+              </div>
               <button onClick={logout} className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-50 px-5 py-3 font-black text-red-600 transition hover:bg-red-100">
                 <LogOut size={17} /> Logout
               </button>
@@ -154,12 +207,12 @@ export default function RoleLoginPage() {
             {session.role === "TEAMLEAD" && (
               <>
                 <TeamLeadDashboard groups={session.leadGroups} attendanceDate={attendanceDate} setAttendanceDate={setAttendanceDate} markAttendance={markAttendance} reviewLeave={reviewLeave} />
-                {session.student && <StudentDashboard student={session.student} leave={leave} setLeave={setLeave} applyLeave={applyLeave} />}
+                {session.student && <StudentDashboard student={session.student} leave={leave} setLeave={setLeave} applyLeave={applyLeave} leaveMessage={leaveMessage} applyingLeave={applyingLeave} />}
               </>
             )}
 
             {session.role === "STUDENT" && session.student && (
-              <StudentDashboard student={session.student} leave={leave} setLeave={setLeave} applyLeave={applyLeave} />
+              <StudentDashboard student={session.student} leave={leave} setLeave={setLeave} applyLeave={applyLeave} leaveMessage={leaveMessage} applyingLeave={applyingLeave} />
             )}
           </div>
         )}
@@ -190,11 +243,11 @@ function TeamLeadDashboard({ groups, attendanceDate, setAttendanceDate, markAtte
   </div>;
 }
 
-function StudentDashboard({ student, leave, setLeave, applyLeave }: { student: Student; leave: { fromDate: string; toDate: string; reason: string }; setLeave: (v: { fromDate: string; toDate: string; reason: string }) => void; applyLeave: (e: FormEvent) => void }) {
+function StudentDashboard({ student, leave, setLeave, applyLeave, leaveMessage, applyingLeave }: { student: Student; leave: { fromDate: string; toDate: string; reason: string }; setLeave: (v: { fromDate: string; toDate: string; reason: string }) => void; applyLeave: (e: FormEvent) => void; leaveMessage: string; applyingLeave: boolean }) {
   return <div className="grid gap-6 lg:grid-cols-2">
     <Card title="Course & Group" icon={<Users size={20} />}><Info label="Course" value={student.courseName} /><Info label="Batch" value={student.batchName || "Not assigned"} /><Info label="Group" value={student.group?.name || "Not assigned"} /><Info label="Team Lead" value={student.group?.teamLead.fullName || "Not assigned"} /></Card>
     <Card title="Fee Information" icon={<IndianRupee size={20} />}><Info label="Total Fee" value={`₹${student.totalFee}`} /><Info label="Paid Fee" value={`₹${student.paidFee}`} /><Info label="Due Fee" value={`₹${Math.max(0, student.totalFee - student.paidFee)}`} /></Card>
-    <Card title="Apply for Leave" icon={<CalendarCheck size={20} />}><form onSubmit={applyLeave} className="space-y-3"><div className="grid grid-cols-2 gap-3"><Input label="From Date" type="date" value={leave.fromDate} onChange={(v) => setLeave({ ...leave, fromDate: v })} /><Input label="To Date" type="date" value={leave.toDate} onChange={(v) => setLeave({ ...leave, toDate: v })} /></div><Input label="Reason" value={leave.reason} onChange={(v) => setLeave({ ...leave, reason: v })} /><button className="w-full rounded-xl bg-blue-600 py-3 font-black text-white">Apply Leave</button></form><div className="mt-4 space-y-2">{student.leaveRequests.map((item) => <p key={item.id} className="rounded-xl bg-slate-50 p-3 text-sm font-bold">{item.fromDate} to {item.toDate}: {item.status}</p>)}</div></Card>
+    <Card title="Apply for Leave" icon={<CalendarCheck size={20} />}><form onSubmit={applyLeave} className="space-y-3"><div className="grid grid-cols-2 gap-3"><Input label="From Date" type="date" value={leave.fromDate} onChange={(v) => setLeave({ ...leave, fromDate: v })} /><Input label="To Date" type="date" value={leave.toDate} onChange={(v) => setLeave({ ...leave, toDate: v })} /></div><Input label="Reason" value={leave.reason} onChange={(v) => setLeave({ ...leave, reason: v })} />{leaveMessage && <p className={`rounded-xl p-3 text-sm font-bold ${leaveMessage.includes("successfully") ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>{leaveMessage}</p>}<button disabled={applyingLeave} className="w-full rounded-xl bg-blue-600 py-3 font-black text-white disabled:opacity-50">{applyingLeave ? "Applying..." : "Apply Leave"}</button></form><div className="mt-4 space-y-2">{student.leaveRequests.map((item) => <p key={item.id} className="rounded-xl bg-slate-50 p-3 text-sm font-bold">{item.fromDate} to {item.toDate}: {item.status}</p>)}</div></Card>
     <Card title="Attendance" icon={<CalendarCheck size={20} />}><div className="max-h-72 space-y-2 overflow-y-auto">{student.attendance.map((item) => <div key={item.id} className="flex justify-between rounded-xl bg-slate-50 p-3 text-sm font-bold"><span>{item.date}</span><span>{item.status}</span></div>)}</div></Card>
     <Card title="Fee Receipts" icon={<FileText size={20} />}><div className="space-y-2">{student.feeReceipts.map((item) => <div key={item.id} className="rounded-xl border border-slate-200 p-3"><p className="font-black">{item.receiptNo} • ₹{item.amount}</p><p className="text-xs text-slate-500">{item.paidOn} {item.paymentMode ? `• ${item.paymentMode}` : ""}</p><DocumentActions viewUrl={item.receiptUrl || `/documents/fee-receipt/${item.id}`} downloadUrl={`/api/documents/fee-receipt/${item.id}/download`} /></div>)}</div></Card>
     <Card title="Offer Letters" icon={<FileText size={20} />}><div className="space-y-2">{student.offerLetters.map((item) => <div key={item.id} className="rounded-xl border border-slate-200 p-3"><p className="font-black">{item.title}</p><p className="text-xs text-slate-500">{item.issueDate}</p><DocumentActions viewUrl={item.letterUrl || `/documents/offer-letter/${item.id}`} downloadUrl={`/api/documents/offer-letter/${item.id}/download`} /></div>)}</div></Card>

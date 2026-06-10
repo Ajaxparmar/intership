@@ -1,6 +1,6 @@
 "use client";
 
-import React, { FormEvent, useState } from "react";
+import React, { FormEvent, useEffect, useState } from "react";
 import Header from "@/app/components/Header";
 import { BookOpen, CalendarCheck, Download, ExternalLink, FileText, IndianRupee, Lock, LogOut, Phone, ReceiptText, User } from "lucide-react";
 
@@ -28,14 +28,29 @@ type Student = {
   feeReceipts: { id: string; receiptNo: string; amount: number; paidOn: string; paymentMode?: string; receiptUrl?: string }[];
 };
 
+const STUDENT_SESSION_KEY = "codescaler-student-session";
+
 export default function StudentLoginPage() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [student, setStudent] = useState<Student | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [restoringSession, setRestoringSession] = useState(true);
+
+  useEffect(() => {
+    try {
+      const savedStudent = window.localStorage.getItem(STUDENT_SESSION_KEY);
+      if (savedStudent) setStudent(JSON.parse(savedStudent));
+    } catch {
+      window.localStorage.removeItem(STUDENT_SESSION_KEY);
+    } finally {
+      setRestoringSession(false);
+    }
+  }, []);
 
   const logout = () => {
+    window.localStorage.removeItem(STUDENT_SESSION_KEY);
     setStudent(null);
     setPhone("");
     setPassword("");
@@ -56,6 +71,7 @@ export default function StudentLoginPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Login failed.");
       setStudent(data.student);
+      window.localStorage.setItem(STUDENT_SESSION_KEY, JSON.stringify(data.student));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed.");
     } finally {
@@ -74,7 +90,11 @@ export default function StudentLoginPage() {
       <Header active="student-login" />
 
       <main className="max-w-6xl mx-auto px-4 py-12">
-        {!student ? (
+        {restoringSession ? (
+          <div className="mx-auto max-w-md rounded-3xl border border-slate-200 bg-white p-8 text-center font-bold text-slate-500 shadow-xl shadow-slate-200/70">
+            Restoring your session...
+          </div>
+        ) : !student ? (
           <div className="max-w-md mx-auto bg-white rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/70 p-8">
             <div className="text-center mb-8">
               <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-4">
