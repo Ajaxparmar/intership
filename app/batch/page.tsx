@@ -2513,7 +2513,7 @@ export default function BatchesPage() {
                     <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex gap-2.5 items-start">
                       <span className="text-amber-500 mt-0.5">⚠️</span>
                       <p className="text-xs text-amber-800 leading-relaxed">
-                        One email address can book only one seat per batch. Seats are first-come, first-served.
+                        One email address can book only one seat per batch, and one WhatsApp number can have only one booking. For booking help, contact 9588161422.
                       </p>
                     </div>
 

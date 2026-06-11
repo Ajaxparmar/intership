@@ -161,8 +161,8 @@ model StudentGroup {
   id              String    @id @default(auto()) @map("_id") @db.ObjectId
   name            String    @unique
   description     String?
-  teamLeadId      String    @db.ObjectId
-  teamLead        Student   @relation("GroupTeamLead", fields: [teamLeadId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  teamLeadId      String?   @db.ObjectId
+  teamLead        Student?  @relation("GroupTeamLead", fields: [teamLeadId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   students        Student[] @relation("GroupMembers")
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -286,6 +286,6 @@ model BookedSeat {
 
   // One student (by email) can book only one seat per batch
   @@unique([email, batchId])
-  @@unique([whatsappNo, batchId])
+  @@unique([whatsappNo])
   @@index([batchId])
 }

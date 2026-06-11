@@ -7,8 +7,19 @@ function normalizeIndianPhone(phone: string) {
   return cleaned.replace(/^(\+91|0)/, "");
 }
 
+const BOOKING_CONTACT = "9588161422";
+
+function duplicateBookingError(booking: {
+  batch: { name: string; course: string; batchType: string };
+}) {
+  return `A seat is already booked in group "${booking.batch.name}" (${booking.batch.course} - ${booking.batch.batchType}). Please contact ${BOOKING_CONTACT} for help.`;
+}
+
 // ── POST /api/batches/book ───────────────────────────────
 export async function POST(req: Request) {
+  let normalizedPhone: string | null = null;
+  let normalizedEmail = "";
+
   try {
     const body = await req.json();
     const { batchId, fullName, whatsappNo, email, college } = body;
@@ -20,14 +31,15 @@ export async function POST(req: Request) {
         { status: 400 }
       );
 
-    const normalizedPhone = normalizeIndianPhone(whatsappNo);
+    normalizedPhone = normalizeIndianPhone(whatsappNo);
     if (!normalizedPhone)
       return NextResponse.json(
         { success: false, error: "WhatsApp number must be a valid 10-digit Indian mobile number." },
         { status: 400 }
       );
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+    normalizedEmail = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail))
       return NextResponse.json(
         { success: false, error: "Invalid email address." },
         { status: 400 }
@@ -57,22 +69,24 @@ export async function POST(req: Request) {
     // ── Duplicate check ──────────────────────────────────
     const [existingEmail, existingPhone] = await Promise.all([
       prisma.bookedSeat.findUnique({
-        where: { email_batchId: { email, batchId } },
+        where: { email_batchId: { email: normalizedEmail, batchId } },
+        include: { batch: { select: { name: true, course: true, batchType: true } } },
       }),
       prisma.bookedSeat.findFirst({
-        where: { whatsappNo: normalizedPhone, batchId },
+        where: { whatsappNo: normalizedPhone },
+        include: { batch: { select: { name: true, course: true, batchType: true } } },
       }),
     ]);
 
     if (existingEmail)
       return NextResponse.json(
-        { success: false, error: "You have already booked a seat in this batch." },
+        { success: false, error: duplicateBookingError(existingEmail) },
         { status: 409 }
       );
 
     if (existingPhone)
       return NextResponse.json(
-        { success: false, error: "This WhatsApp number has already booked a seat in this batch." },
+        { success: false, error: duplicateBookingError(existingPhone) },
         { status: 409 }
       );
 
@@ -81,7 +95,7 @@ export async function POST(req: Request) {
 
     const [booking] = await prisma.$transaction([
       prisma.bookedSeat.create({
-        data: { batchId, fullName, whatsappNo: normalizedPhone, email, college },
+        data: { batchId, fullName, whatsappNo: normalizedPhone, email: normalizedEmail, college },
       }),
       prisma.batch.update({
         where: { id: batchId },
@@ -99,11 +113,26 @@ export async function POST(req: Request) {
     });
   } catch (err: any) {
     // Race condition duplicate
-    if (err?.code === "P2002")
+    if (err?.code === "P2002") {
+      const existingBooking = await prisma.bookedSeat.findFirst({
+        where: {
+          OR: [
+            ...(normalizedPhone ? [{ whatsappNo: normalizedPhone }] : []),
+            ...(normalizedEmail ? [{ email: normalizedEmail }] : []),
+          ],
+        },
+        include: { batch: { select: { name: true, course: true, batchType: true } } },
+      });
       return NextResponse.json(
-        { success: false, error: "This email or WhatsApp number has already booked a seat in this batch." },
+        {
+          success: false,
+          error: existingBooking
+            ? duplicateBookingError(existingBooking)
+            : `This email or WhatsApp number already has a booking. Please contact ${BOOKING_CONTACT} for help.`,
+        },
         { status: 409 }
       );
+    }
 
     console.error("[POST /api/batches/book]", err);
     return NextResponse.json(

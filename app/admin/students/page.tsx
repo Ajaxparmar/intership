@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, CalendarCheck, FileText, IndianRupee, Pencil, PlusCircle, Search, Trash2, User, X } from "lucide-react";
+import { AlertTriangle, CalendarCheck, CheckSquare, FileText, IndianRupee, Pencil, PlusCircle, Search, Trash2, User, X } from "lucide-react";
 
 type Attendance = {
   id: string;
@@ -44,6 +44,10 @@ export default function StudentsTablePage() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [attendanceDate, setAttendanceDate] = useState(today);
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
+  const [bulkAttendanceStatus, setBulkAttendanceStatus] = useState<Attendance["status"]>("PRESENT");
+  const [submittingAttendance, setSubmittingAttendance] = useState(false);
+  const [attendanceMessage, setAttendanceMessage] = useState("");
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [editForm, setEditForm] = useState(initialEditForm);
   const [editMessage, setEditMessage] = useState("");
@@ -89,6 +93,45 @@ export default function StudentsTablePage() {
       body: JSON.stringify({ date: attendanceDate, status }),
     });
     if (res.ok) await loadStudents();
+  };
+
+  const toggleStudent = (studentId: string) => {
+    setSelectedStudentIds((current) =>
+      current.includes(studentId) ? current.filter((id) => id !== studentId) : [...current, studentId]
+    );
+  };
+
+  const allFilteredSelected = filtered.length > 0 && filtered.every((student) => selectedStudentIds.includes(student.id));
+
+  const toggleAllFiltered = () => {
+    const filteredIds = filtered.map((student) => student.id);
+    setSelectedStudentIds((current) =>
+      allFilteredSelected
+        ? current.filter((id) => !filteredIds.includes(id))
+        : [...new Set([...current, ...filteredIds])]
+    );
+  };
+
+  const submitBulkAttendance = async () => {
+    if (selectedStudentIds.length === 0) return;
+    setSubmittingAttendance(true);
+    setAttendanceMessage("");
+    try {
+      const response = await fetch("/api/admin/attendance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentIds: selectedStudentIds, date: attendanceDate, status: bulkAttendanceStatus }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not submit attendance.");
+      setAttendanceMessage(`Attendance submitted for ${data.updatedCount} student${data.updatedCount === 1 ? "" : "s"}.`);
+      setSelectedStudentIds([]);
+      await loadStudents();
+    } catch (error) {
+      setAttendanceMessage(error instanceof Error ? error.message : "Could not submit attendance.");
+    } finally {
+      setSubmittingAttendance(false);
+    }
   };
 
   const openEdit = (student: Student) => {
@@ -195,6 +238,21 @@ export default function StudentsTablePage() {
             />
           </label>
         </div>
+        <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-blue-100 bg-blue-50 p-4 lg:flex-row lg:items-center">
+          <div className="flex flex-1 items-center gap-2 font-black text-blue-900">
+            <CheckSquare size={18} />
+            {selectedStudentIds.length} student{selectedStudentIds.length === 1 ? "" : "s"} selected
+          </div>
+          <select value={bulkAttendanceStatus} onChange={(event) => setBulkAttendanceStatus(event.target.value as Attendance["status"])} className="rounded-xl border border-blue-200 bg-white px-4 py-2.5 text-sm font-black text-slate-700">
+            <option value="PRESENT">Present</option>
+            <option value="ABSENT">Absent</option>
+            <option value="LEAVE">Leave</option>
+          </select>
+          <button disabled={submittingAttendance || selectedStudentIds.length === 0} onClick={submitBulkAttendance} className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-black text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
+            {submittingAttendance ? "Submitting..." : "Submit Attendance"}
+          </button>
+        </div>
+        {attendanceMessage && <p className="mt-3 rounded-xl bg-slate-50 p-3 text-sm font-bold text-slate-700">{attendanceMessage}</p>}
       </section>
 
       <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
@@ -202,6 +260,9 @@ export default function StudentsTablePage() {
           <table className="min-w-full divide-y divide-slate-100">
             <thead className="bg-slate-50">
               <tr>
+                <th className="px-5 py-4 text-left">
+                  <input type="checkbox" checked={allFilteredSelected} onChange={toggleAllFiltered} aria-label="Select all visible students" className="h-4 w-4 rounded border-slate-300 text-blue-600" />
+                </th>
                 {["Student", "Course / Batch", "Fees", "Due Date", "Attendance", "Offers", "Actions"].map((heading) => (
                   <th key={heading} className="px-5 py-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
                     {heading}
@@ -212,12 +273,12 @@ export default function StudentsTablePage() {
             <tbody className="divide-y divide-slate-100">
               {loading && (
                 <tr>
-                  <td colSpan={7} className="px-5 py-10 text-center text-sm font-bold text-slate-500">Loading students...</td>
+                  <td colSpan={8} className="px-5 py-10 text-center text-sm font-bold text-slate-500">Loading students...</td>
                 </tr>
               )}
               {!loading && filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-5 py-10 text-center text-sm font-bold text-slate-500">No students found.</td>
+                  <td colSpan={8} className="px-5 py-10 text-center text-sm font-bold text-slate-500">No students found.</td>
                 </tr>
               )}
               {filtered.map((student) => {
@@ -226,6 +287,9 @@ export default function StudentsTablePage() {
 
                 return (
                   <tr key={student.id} className="hover:bg-slate-50/70">
+                    <td className="px-5 py-4">
+                      <input type="checkbox" checked={selectedStudentIds.includes(student.id)} onChange={() => toggleStudent(student.id)} aria-label={`Select ${student.fullName}`} className="h-4 w-4 rounded border-slate-300 text-blue-600" />
+                    </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
                         <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-slate-100 text-slate-400">

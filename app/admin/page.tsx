@@ -5,6 +5,7 @@ import Link from "next/link";
 import { BookOpen, CalendarDays, IndianRupee, LayoutDashboard, RefreshCw, UserRoundCog, Users } from "lucide-react";
 
 type Metrics = {
+  totalFee: number;
   totalCollection: number;
   totalRegistrations: number;
   totalGroups: number;
@@ -13,6 +14,7 @@ type Metrics = {
 };
 
 const initialMetrics: Metrics = {
+  totalFee: 0,
   totalCollection: 0,
   totalRegistrations: 0,
   totalGroups: 0,
@@ -45,6 +47,13 @@ export default function AdminDashboardPage() {
   }, []);
 
   const cards = [
+    {
+      label: "Total Fee",
+      value: `₹${metrics.totalFee.toLocaleString("en-IN")}`,
+      description: "Total fees assigned to all students",
+      icon: IndianRupee,
+      color: "bg-indigo-50 text-indigo-700",
+    },
     {
       label: "Total Collection",
       value: `₹${metrics.totalCollection.toLocaleString("en-IN")}`,
@@ -104,7 +113,7 @@ export default function AdminDashboardPage() {
 
       {error && <p className="rounded-2xl border border-red-100 bg-red-50 p-4 text-sm font-bold text-red-700">{error}</p>}
 
-      <section className="grid gap-5 sm:grid-cols-2 xl:grid-cols-5">
+      <section className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
         {cards.map((card) => {
           const Icon = card.icon;
           return (

@@ -9,6 +9,7 @@ const links = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/students", label: "Students", icon: Users },
   { href: "/admin/students/register", label: "Register Student", icon: PlusCircle },
+  { href: "/admin/student-assignments", label: "Student Assignments", icon: UserRoundCog },
   { href: "/admin/groups", label: "Groups & Team Leads", icon: UserRoundCog },
   { href: "/admin/leaves", label: "Leave Requests", icon: CalendarCheck },
   { href: "/admin/batches/add", label: "Add Batch", icon: PlusCircle },

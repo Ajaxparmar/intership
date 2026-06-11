@@ -59,10 +59,10 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Student not found." }, { status: 404 });
     }
     if (data.role === "STUDENT") {
-      const leadGroupCount = await prisma.studentGroup.count({ where: { teamLeadId: student.id } });
-      if (leadGroupCount > 0) {
-        return NextResponse.json({ error: "Assign another team lead to this student's groups before removing the role." }, { status: 409 });
-      }
+      await prisma.studentGroup.updateMany({
+        where: { teamLeadId: student.id },
+        data: { teamLeadId: null },
+      });
     }
 
     const user = student.user

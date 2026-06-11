@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 export async function GET() {
   try {
     const [feeSummary, totalRegistrations, totalGroups, totalBatches, students] = await Promise.all([
-      prisma.student.aggregate({ _sum: { paidFee: true } }),
+      prisma.student.aggregate({ _sum: { totalFee: true, paidFee: true } }),
       prisma.student.count(),
       prisma.studentGroup.count(),
       prisma.batch.count(),
@@ -18,6 +18,7 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       metrics: {
+        totalFee: feeSummary._sum.totalFee ?? 0,
         totalCollection: feeSummary._sum.paidFee ?? 0,
         totalRegistrations,
         totalGroups,

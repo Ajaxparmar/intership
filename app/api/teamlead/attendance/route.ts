@@ -4,8 +4,12 @@ import { prisma } from "@/lib/prisma";
 export async function POST(request: Request) {
   try {
     const data = await request.json();
+    const today = new Date().toISOString().slice(0, 10);
     if (!data.teamLeadId || !data.studentId || !data.date || !["PRESENT", "ABSENT", "LEAVE"].includes(data.status)) {
       return NextResponse.json({ error: "Team lead, student, date, and status are required." }, { status: 400 });
+    }
+    if (data.date !== today) {
+      return NextResponse.json({ error: "Team leads can only mark attendance for the current date." }, { status: 403 });
     }
 
     const student = await prisma.student.findFirst({

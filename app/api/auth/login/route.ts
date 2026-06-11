@@ -27,7 +27,7 @@ export async function POST(request: Request) {
               include: {
                 students: {
                   include: {
-                    attendance: { orderBy: { date: "desc" }, take: 10 },
+                    attendance: { orderBy: { date: "desc" } },
                     leaveRequests: { where: { status: "PENDING" }, orderBy: { createdAt: "desc" } },
                   },
                 },
