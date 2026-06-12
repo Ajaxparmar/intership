@@ -675,7 +675,7 @@ import { twMerge } from "tailwind-merge";
 
 function cn(...inputs: ClassValue[]) { return twMerge(clsx(inputs)); }
 
-const COURSES  = ["Frontend Web Design", "Full Stack Development", "Data Analyst"];
+const COURSES  = ["Frontend Web Design", "Full Stack Development", "Data Analyst", "Non Tech"];
 const DAYS_ALL = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const TYPES    = ["ONLINE", "OFFLINE", "HYBRID"] as const;
 type BatchType = typeof TYPES[number];
