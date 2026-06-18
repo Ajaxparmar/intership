@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import chromium from "@sparticuz/chromium";
 import puppeteer from "puppeteer-core";
 
 const CHROME_PATHS = [
@@ -10,20 +11,29 @@ const CHROME_PATHS = [
   "/usr/bin/chromium-browser",
 ].filter((value): value is string => Boolean(value));
 
-function chromeExecutable() {
-  const executable = CHROME_PATHS.find((candidate) => fs.existsSync(candidate));
-  if (!executable) {
-    throw new Error("Chrome is required to generate document PDFs. Set CHROME_EXECUTABLE_PATH.");
+async function browserLaunchOptions() {
+  const localExecutable = CHROME_PATHS.find((candidate) => fs.existsSync(candidate));
+
+  if (localExecutable) {
+    return {
+      executablePath: localExecutable,
+      headless: true as const,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    };
   }
-  return executable;
+
+  return {
+    executablePath: await chromium.executablePath(),
+    headless: "shell" as const,
+    args: puppeteer.defaultArgs({
+      args: chromium.args,
+      headless: "shell",
+    }),
+  };
 }
 
 export async function pageToPdf(url: string) {
-  const browser = await puppeteer.launch({
-    executablePath: chromeExecutable(),
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
+  const browser = await puppeteer.launch(await browserLaunchOptions());
 
   try {
     const page = await browser.newPage();
