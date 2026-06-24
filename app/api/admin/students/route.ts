@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
+import { mkdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/password";
 import type { FeeStatus } from "@prisma/client";
 
+export const runtime = "nodejs";
+
 const MAX_IMAGE_BYTES = 1.5 * 1024 * 1024;
+const IMAGE_UPLOAD_DIR = join(process.cwd(), "public", "uploads", "student-images");
+const IMAGE_PUBLIC_PATH = "/uploads/student-images";
 
 function feeStatus(totalFee: number, paidFee: number, nextDueDate?: string): FeeStatus {
   if (paidFee >= totalFee) return "PAID";
@@ -16,7 +22,14 @@ function generateStudentPassword(fullName: string, phone: string) {
   return `${namePrefix}@${phone.slice(-4)}`;
 }
 
-async function fileToDataUrl(file: File | null) {
+function extensionFromMimeType(type: string) {
+  if (type === "image/png") return "png";
+  if (type === "image/webp") return "webp";
+  if (type === "image/gif") return "gif";
+  return "jpg";
+}
+
+async function saveStudentImage(file: File | null, phone: string) {
   if (!file || file.size === 0) return undefined;
   if (!file.type.startsWith("image/")) {
     throw new Error("Only image files are allowed.");
@@ -26,24 +39,82 @@ async function fileToDataUrl(file: File | null) {
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  return `data:${file.type};base64,${buffer.toString("base64")}`;
+  const extension = extensionFromMimeType(file.type);
+  const filename = `${phone}-${Date.now()}.${extension}`;
+
+  await mkdir(IMAGE_UPLOAD_DIR, { recursive: true });
+  await writeFile(join(IMAGE_UPLOAD_DIR, filename), buffer);
+
+  return `${IMAGE_PUBLIC_PATH}/${filename}`;
 }
 
-export async function GET() {
+const DEFAULT_PAGE_SIZE = 10;
+const MAX_PAGE_SIZE = 50;
+
+export async function GET(request: Request) {
   try {
-    const students = await prisma.student.findMany({
-      orderBy: { createdAt: "desc" },
-      include: {
-        batch: true,
-        group: { include: { teamLead: { select: { id: true, fullName: true, phone: true } } } },
-        attendance: { orderBy: { date: "desc" }, take: 10 },
-        offerLetters: { orderBy: { createdAt: "desc" } },
-        leaveRequests: { orderBy: { createdAt: "desc" } },
-        feeReceipts: { orderBy: { createdAt: "desc" } },
+    const { searchParams } = new URL(request.url);
+    const page = Math.max(1, Number(searchParams.get("page") || 1));
+    const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, Number(searchParams.get("pageSize") || DEFAULT_PAGE_SIZE)));
+    const query = searchParams.get("query")?.trim();
+    const where = query
+      ? {
+          OR: [
+            { fullName: { contains: query, mode: "insensitive" as const } },
+            { phone: { contains: query } },
+            { email: { contains: query, mode: "insensitive" as const } },
+            { courseName: { contains: query, mode: "insensitive" as const } },
+            { batchName: { contains: query, mode: "insensitive" as const } },
+          ],
+        }
+      : undefined;
+
+    const [students, totalStudents] = await Promise.all([
+      prisma.student.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        select: {
+          id: true,
+          fullName: true,
+          phone: true,
+          email: true,
+          address: true,
+          fatherName: true,
+          collegeUniversity: true,
+          profileImage: true,
+          courseName: true,
+          batchId: true,
+          batchName: true,
+          duration: true,
+          startDate: true,
+          endDate: true,
+          totalFee: true,
+          paidFee: true,
+          feeStatus: true,
+          nextDueDate: true,
+          feeNotes: true,
+          attendance: { orderBy: { date: "desc" }, take: 10 },
+          offerLetters: {
+            orderBy: { createdAt: "desc" },
+            select: { id: true },
+          },
+        },
+      }),
+      prisma.student.count({ where }),
+    ]);
+
+    return NextResponse.json({
+      success: true,
+      students,
+      pagination: {
+        page,
+        pageSize,
+        totalStudents,
+        totalPages: Math.max(1, Math.ceil(totalStudents / pageSize)),
       },
     });
-
-    return NextResponse.json({ success: true, students });
   } catch (error) {
     console.error("List students error:", error);
     return NextResponse.json({ error: "Failed to load students." }, { status: 500 });
@@ -79,7 +150,7 @@ export async function POST(request: Request) {
     }
 
     const password = generateStudentPassword(fullName, phone);
-    const profileImage = await fileToDataUrl(formData.get("profileImage") as File | null);
+    const profileImage = await saveStudentImage(formData.get("profileImage") as File | null, phone);
     const nextDueDate = get("nextDueDate") || undefined;
     const batch = batchId
       ? await prisma.batch.findUnique({ where: { id: batchId } })

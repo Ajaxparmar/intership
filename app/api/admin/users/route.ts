@@ -61,7 +61,7 @@ export async function PATCH(request: Request) {
     if (data.role === "STUDENT") {
       await prisma.studentGroup.updateMany({
         where: { teamLeadId: student.id },
-        data: { teamLeadId: null },
+        data: { teamLeadId: null } as any,
       });
     }
 
