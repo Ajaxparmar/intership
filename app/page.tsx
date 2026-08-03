@@ -1,24 +1,31 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { 
-  User, 
-  BookOpen, 
-  CreditCard, 
-  ChevronRight, 
-  ChevronLeft, 
-  CheckCircle2, 
+import { QRCodeSVG } from "qrcode.react";
+
+import {
+  User,
+  BookOpen,
+  CreditCard,
+  ChevronRight,
+  ChevronLeft,
+  CheckCircle2,
   ArrowRight,
   Phone,
   Mail,
   MapPin,
   Building2,
   GraduationCap,
-  Briefcase
+  Briefcase,
+  X,
+  QrCode
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import RunTimer from "@/app/timer";
+import AlreadyRegisteredBanner from "./AlreadyRegisteredBanner";
+import Header from "@/app/components/Header";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -27,7 +34,7 @@ function cn(...inputs: ClassValue[]) {
 // Logo URL provided: https://www.codescaler.com/
 // I'll use a text-based logo with a professional icon if the live image fails or looks bad in a container.
 // But the user specifically asked to use the logo.
-const LOGO_URL = "https://www.codescaler.com/assets/images/logo.png"; // Guessed common path, but I'll fallback to text.
+const LOGO_URL = "https://www.codescaler.com/logo.png"; // Guessed common path, but I'll fallback to text.
 
 interface FormData {
   // Step 1
@@ -51,7 +58,7 @@ const INITIAL_DATA: FormData = {
   name: "",
   fatherName: "",
   address: "",
-  gender: "Male",
+  gender: "", // Changed to empty to force selection
   phone: "",
   email: "",
   academicClass: "",
@@ -59,16 +66,14 @@ const INITIAL_DATA: FormData = {
   rollNo: "",
   collegeName: "",
   universityName: "",
-  duration: "1 month",
-  domain: "Full stack",
+  duration: "", // Force selection
+  domain: "", // Force selection
 };
 
 const DURATION_PRICES: Record<string, number> = {
   "1 month": 3999,
-  "45 days": 5000,
-  "2 month": 7500, // Added 2 month based on dropdown request
-  "3 month": 12000,
-  "6 month": 24999,
+  "45 days": 3999,
+  "2 month": 3999,
 };
 
 export default function App() {
@@ -77,17 +82,69 @@ export default function App() {
   const [formData, setFormData] = useState<FormData>(INITIAL_DATA);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [showQRCode, setShowQRCode] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
 
   const price = DURATION_PRICES[formData.duration] || 0;
 
   const updateField = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
   };
 
-  const nextStep = () => setStep((s) => Math.min(s + 1, 3));
+  const validateStep = (s: number) => {
+    const newErrors: Partial<Record<keyof FormData, string>> = {};
+    if (s === 1) {
+      if (!formData.name.trim()) newErrors.name = "Full Name is required";
+      if (!formData.fatherName.trim()) newErrors.fatherName = "Father's Name is required";
+      if (!formData.address.trim()) newErrors.address = "Address is required";
+      if (!formData.gender) newErrors.gender = "Gender selection is required";
+      if (!formData.phone.trim()) {
+        newErrors.phone = "Phone Number is required";
+      } else if (!/^\d{10}$/.test(formData.phone.replace(/[^0-9]/g, ""))) {
+        newErrors.phone = "Invalid Phone Number (10 digits required)";
+      }
+      if (!formData.email.trim()) {
+        newErrors.email = "Email is required";
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        newErrors.email = "Invalid Email Address";
+      }
+    } else if (s === 2) {
+      if (!formData.academicClass.trim()) newErrors.academicClass = "Degree/Class is required";
+      if (!formData.yearSemester.trim()) newErrors.yearSemester = "Year/Semester is required";
+      if (!formData.rollNo.trim()) newErrors.rollNo = "Roll Number is required";
+      if (!formData.collegeName.trim()) newErrors.collegeName = "College Name is required";
+      if (!formData.universityName.trim()) newErrors.universityName = "University Name is required";
+      if (!formData.duration || formData.duration === "") newErrors.duration = "Please select duration";
+      if (!formData.domain || formData.domain === "") newErrors.domain = "Please select a domain";
+    }
+
+    setErrors(newErrors);
+    const isValid = Object.keys(newErrors).length === 0;
+
+    return isValid;
+  };
+
+  const nextStep = () => {
+    if (validateStep(step)) {
+      setStep((s) => Math.min(s + 1, 3));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
 
   const handleSubmit = async () => {
+    if (!validateStep(1) || !validateStep(2)) {
+      alert("Please complete all required fields correctly.");
+      return;
+    }
     setIsSubmitting(true);
     try {
       const response = await fetch("/api/apply", {
@@ -98,6 +155,7 @@ export default function App() {
       const result = await response.json();
       if (result.success) {
         setIsSubmitted(true);
+        setIsPaymentModalOpen(true);
       } else {
         alert(result.error || "Submission failed");
       }
@@ -111,30 +169,12 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-neutral-50 text-neutral-900 font-sans selection:bg-blue-100">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-neutral-200">
-        <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setView("form")}>
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
-              CS
-            </div>
-            <span className="font-bold text-xl tracking-tight text-neutral-800">CodeScaler</span>
-          </div>
-          <div className="hidden md:flex items-center gap-8 text-neutral-500 font-medium">
-            <button onClick={() => setView("roadmap")} className={cn("hover:text-blue-600 transition-colors cursor-pointer", view === "roadmap" && "text-blue-600 font-bold")}>Roadmap</button>
-            <button onClick={() => setView("form")} className={cn("hover:text-blue-600 transition-colors cursor-pointer", view === "form" && "text-blue-600 font-bold")}>Internship</button>
-            <button 
-              onClick={() => setView("contact")} 
-              className={cn(
-                "px-5 py-2 rounded-full transition-all font-bold",
-                view === "contact" ? "bg-blue-600 text-white" : "bg-neutral-900 text-white hover:bg-neutral-800"
-              )}
-            >
-              Contact Us
-            </button>
-          </div>
-        </div>
-      </nav>
+      <Header
+        active={view === "form" ? "internship" : view}
+        onRoadmapClick={() => setView("roadmap")}
+        onInternshipClick={() => setView("form")}
+        onContactClick={() => setView("contact")}
+      />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-12 md:py-20">
@@ -145,22 +185,15 @@ export default function App() {
         ) : (
           <>
             <div className="text-center mb-12">
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-bold border border-blue-100 mb-6"
-              >
-                <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-                Special Batch: Guru Jambheshwar University Students
-              </motion.div>
-              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-neutral-900">
+         
+              <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4 text-neutral-900 px-2">
                 Internship Program <span className="text-blue-600">2026</span>
               </h1>
               <p className="text-neutral-500 text-lg max-w-2xl mx-auto">
                 Kickstart your career with CodeScaler. Join our intensive program and work on real-world projects with industry experts.
               </p>
             </div>
-
+          <RunTimer />
             {/* Step Indicator */}
             {!isSubmitted && (
               <div className="flex items-center justify-center mb-12 relative px-4">
@@ -168,12 +201,12 @@ export default function App() {
                 <div className="flex justify-between w-full max-w-xs bg-neutral-50 px-4">
                   {[1, 2, 3].map((s) => (
                     <div key={s} className="flex flex-col items-center gap-2 group">
-                      <div 
+                      <div
                         className={cn(
                           "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 border-2",
-                          step === s ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200 scale-110" : 
-                          step > s ? "bg-green-500 border-green-500 text-white" : 
-                          "bg-white border-neutral-300 text-neutral-400"
+                          step === s ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200 scale-110" :
+                            step > s ? "bg-green-500 border-green-500 text-white" :
+                              "bg-white border-neutral-300 text-neutral-400"
                         )}
                       >
                         {step > s ? <CheckCircle2 size={18} /> : s}
@@ -189,12 +222,16 @@ export default function App() {
                 </div>
               </div>
             )}
-
+     <div className="max-w-4xl mx-auto rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-neutral-100 overflow-hidden relative">
+              
+<AlreadyRegisteredBanner />
+</div>
             {/* Form Container */}
             <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-neutral-100 overflow-hidden relative">
+              
               <AnimatePresence mode="wait">
                 {isSubmitted ? (
-                  <motion.div 
+                  <motion.div
                     key="success"
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -205,27 +242,79 @@ export default function App() {
                     </div>
                     <h2 className="text-3xl font-bold mb-4">Application Submitted!</h2>
                     <p className="text-neutral-500 mb-8 max-w-md mx-auto">
-                      Thank you for applying to CodeScaler. Our team will review your details and contact you within 48 hours for the next steps.
+                      Thank you for applying to CodeScaler. Your details has been saved successfully.
                     </p>
                     <div className="flex flex-col gap-4 items-center">
-                      <div className="p-6 bg-blue-50 rounded-2xl border border-blue-100 w-full max-w-sm">
-                        <p className="text-blue-600 font-semibold mb-2">Proceed to Payment</p>
-                        <p className="text-neutral-600 text-sm mb-4">Amount to pay: ₹{price}</p>
-                        <a 
-                          href="https://rzp.io/l/codescaler-internship" 
-                          target="_blank" 
-                          className="block w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
-                        >
-                          Pay Now
-                        </a>
+                      <div className="p-6 bg-blue-50 rounded-2xl border border-blue-100 w-full max-w-md">
+                        {!showQRCode ? (
+                          <>
+                            <p className="text-blue-600 font-bold mb-2 text-lg">Order Summary</p>
+                            <div className="flex justify-between items-center mb-4 py-2 border-b border-blue-100/50">
+                              <span className="text-neutral-600">Internship Program</span>
+                              <span className="font-bold">₹{price}</span>
+                            </div>
+                            <button
+                              onClick={() => {
+                                setIsPaymentModalOpen(true);
+                                setShowQRCode(true);
+                              }}
+                              className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2"
+                            >
+                              <QrCode size={20} />
+                              View Payment QR
+                            </button>
+                          </>
+                        ) : (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="flex flex-col items-center"
+                          >
+                            <div className="bg-white p-4 rounded-2xl shadow-inner mb-6 border border-neutral-100">
+                              <QRCodeSVG
+                                value={`upi://pay?pa=q566002417@ybl&pn=CodeScaler&am=${price}&cu=INR&tn=Payment`}
+                                size={220}
+                              />
+                            </div>
+                            <div className="text-center space-y-4">
+                              <p className="font-bold text-neutral-800">Scan QR to Pay: ₹{price}</p>
+                              <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl">
+                                <p className="text-sm text-amber-800 font-semibold">
+                                  ⚠️ MANDATORY STEP:
+                                </p>
+                                <p className="text-sm text-amber-700 mt-1 leading-relaxed decoration-amber-300">
+                                  After payment, share your payment screenshot to <span className="font-black text-amber-900 underline">8572892552</span> on WhatsApp for confirmation.
+                                </p>
+                                <a
+                                  href="https://wa.me/918572892552"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="mt-4 block py-3 px-4 bg-green-500 hover:bg-green-600 rounded-xl font-black text-center text-lg tracking-tight transition-all"
+                                >
+                                  Share Payment Screenshot
+                                </a>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => setShowQRCode(false)}
+                                  className="flex-1 py-3 text-sm font-bold text-neutral-500 hover:text-neutral-800"
+                                >
+                                  Go Back
+                                </button>
+
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
                       </div>
-                      <button 
+                      <button
                         onClick={() => {
-                            setStep(1);
-                            setFormData(INITIAL_DATA);
-                            setIsSubmitted(false);
+                          setStep(1);
+                          setFormData(INITIAL_DATA);
+                          setIsSubmitted(false);
+                          setShowQRCode(false);
                         }}
-                        className="text-neutral-400 text-sm hover:text-neutral-600 transition-colors"
+                        className="text-neutral-400 text-sm hover:text-neutral-600 transition-colors mt-4"
                       >
                         Submit another application
                       </button>
@@ -238,7 +327,7 @@ export default function App() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className="p-8 md:p-12"
+                    className="p-5 md:p-12"
                   >
                     {step === 1 && (
                       <div className="space-y-6">
@@ -249,17 +338,24 @@ export default function App() {
                           <h2 className="text-2xl font-bold">Personal Information</h2>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <Input label="Full Name" placeholder="John Doe" value={formData.name} onChange={(v) => updateField("name", v)} icon={<User size={18} />} />
-                          <Input label="Father's Name" placeholder="Robert Doe" value={formData.fatherName} onChange={(v) => updateField("fatherName", v)} icon={<User size={18} />} />
+                          <Input label="Full Name" placeholder="John Doe" value={formData.name} onChange={(v) => updateField("name", v)} icon={<User size={18} />} error={errors.name} />
+                          <Input label="Father's Name" placeholder="Robert Doe" value={formData.fatherName} onChange={(v) => updateField("fatherName", v)} icon={<User size={18} />} error={errors.fatherName} />
                           <div className="md:col-span-2">
-                            <Input label="Full Address" placeholder="123 Street, City, State" value={formData.address} onChange={(v) => updateField("address", v)} icon={<MapPin size={18} />} />
+                            <Input label="Full Address" placeholder="123 Street, City, State" value={formData.address} onChange={(v) => updateField("address", v)} icon={<MapPin size={18} />} error={errors.address} />
                           </div>
                           <div className="flex flex-col gap-2">
-                            <label className="text-sm font-semibold text-neutral-600">Gender</label>
+                            <div className="flex justify-between items-center">
+                              <label className={cn(
+                                "text-sm font-semibold transition-colors",
+                                errors.gender ? "text-red-500" : "text-neutral-600"
+                              )}>Gender</label>
+                              {errors.gender && <span className="text-[10px] font-bold text-red-500 uppercase tracking-tighter">{errors.gender}</span>}
+                            </div>
                             <div className="flex gap-4">
                               {["Male", "Female", "Other"].map((g) => (
                                 <button
                                   key={g}
+                                  type="button"
                                   onClick={() => updateField("gender", g)}
                                   className={cn(
                                     "flex-1 py-3 px-4 rounded-xl border text-sm font-medium transition-all",
@@ -271,9 +367,9 @@ export default function App() {
                               ))}
                             </div>
                           </div>
-                          <Input label="Phone Number" placeholder="+91 0000000000" type="tel" value={formData.phone} onChange={(v) => updateField("phone", v)} icon={<Phone size={18} />} />
+                          <Input label="Phone Number" placeholder="10 Digit Phone" type="tel" value={formData.phone} onChange={(v) => updateField("phone", v)} icon={<Phone size={18} />} error={errors.phone} />
                           <div className="md:col-span-2">
-                            <Input label="Email Address" placeholder="john@example.com" type="email" value={formData.email} onChange={(v) => updateField("email", v)} icon={<Mail size={18} />} />
+                            <Input label="Email Address" placeholder="john@example.com" type="email" value={formData.email} onChange={(v) => updateField("email", v)} icon={<Mail size={18} />} error={errors.email} />
                           </div>
                         </div>
                       </div>
@@ -287,30 +383,32 @@ export default function App() {
                           </div>
                           <div className="flex flex-col">
                             <h2 className="text-2xl font-bold">Academic Details</h2>
-                            <p className="text-xs text-blue-600 font-bold uppercase tracking-wider">Priority Admission for GJU Students</p>
+                            <p className="text-xs text-blue-600 font-bold uppercase tracking-wider">Admission for GJU Students</p>
                           </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <Input label="Class/Degree" placeholder="B.Tech" value={formData.academicClass} onChange={(v) => updateField("academicClass", v)} icon={<GraduationCap size={18} />} />
-                          <Input label="Year/Semester" placeholder="3rd Year / 6th Sem" value={formData.yearSemester} onChange={(v) => updateField("yearSemester", v)} icon={<BookOpen size={18} />} />
-                          <Input label="Roll Number" placeholder="123456" value={formData.rollNo} onChange={(v) => updateField("rollNo", v)} />
-                          <Input label="College Name" placeholder="Example Institute of Tech" value={formData.collegeName} onChange={(v) => updateField("collegeName", v)} icon={<Building2 size={18} />} />
+                          <Input label="Class/Degree" placeholder="B.Tech" value={formData.academicClass} onChange={(v) => updateField("academicClass", v)} icon={<GraduationCap size={18} />} error={errors.academicClass} />
+                          <Input label="Year/Semester" placeholder="3rd Year / 6th Sem" value={formData.yearSemester} onChange={(v) => updateField("yearSemester", v)} icon={<BookOpen size={18} />} error={errors.yearSemester} />
+                          <Input label="Roll Number" placeholder="123456" value={formData.rollNo} onChange={(v) => updateField("rollNo", v)} error={errors.rollNo} />
+                          <Input label="College Name" placeholder="Example Institute of Tech" value={formData.collegeName} onChange={(v) => updateField("collegeName", v)} icon={<Building2 size={18} />} error={errors.collegeName} />
                           <div className="md:col-span-2">
-                            <Input label="University Name" placeholder="State University" value={formData.universityName} onChange={(v) => updateField("universityName", v)} icon={<Building2 size={18} />} />
+                            <Input label="University Name" placeholder="State University" value={formData.universityName} onChange={(v) => updateField("universityName", v)} icon={<Building2 size={18} />} error={errors.universityName} />
                           </div>
-                          
-                          <Select 
-                            label="Internship Duration" 
-                            value={formData.duration} 
-                            options={["1 month", "45 days", "2 month", "3 month", "6 month"]} 
-                            onChange={(v) => updateField("duration", v)} 
+
+                          <Select
+                            label="Internship Duration"
+                            value={formData.duration}
+                            options={["1 month", "45 days", "2 month", "3 month", "6 month"]}
+                            onChange={(v) => updateField("duration", v)}
+                            error={errors.duration}
                           />
-                          <Select 
-                            label="Selected Domain" 
-                            value={formData.domain} 
-                            options={["Data Analyst", "Full stack", "Frontend", "Backend"]} 
-                            onChange={(v) => updateField("domain", v)} 
+                          <Select
+                            label="Selected Domain"
+                            value={formData.domain}
+                            options={["Data Analyst", "FullStack Development", "Frontend Development", "Backend Development"]}
+                            onChange={(v) => updateField("domain", v)}
                             icon={<Briefcase size={18} />}
+                            error={errors.domain}
                           />
                         </div>
                       </div>
@@ -324,7 +422,7 @@ export default function App() {
                           </div>
                           <h2 className="text-2xl font-bold">Review & Payment</h2>
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                           <div className="space-y-4">
                             <h3 className="text-sm font-bold uppercase tracking-wider text-neutral-400">Application Summary</h3>
@@ -335,7 +433,7 @@ export default function App() {
                               <SummaryItem label="College" value={formData.collegeName} />
                             </div>
                           </div>
-                          
+
                           <div className="bg-neutral-900 text-white rounded-3xl p-8 relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/20 blur-3xl rounded-full" />
                             <h3 className="text-blue-400 font-bold text-sm mb-6 uppercase tracking-widest">Pricing Details</h3>
@@ -372,7 +470,7 @@ export default function App() {
                         <ChevronLeft size={20} />
                         Back
                       </button>
-                      
+
                       {step < 3 ? (
                         <button
                           onClick={nextStep}
@@ -401,11 +499,16 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="py-12 border-t border-neutral-200 mt-20">
+      <footer className="py-8 border-t border-neutral-200 mt-20">
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex items-center gap-2 grayscale brightness-0">
-             <div className="w-8 h-8 bg-neutral-800 rounded-lg flex items-center justify-center text-white font-bold text-lg">CS</div>
-             <span className="font-bold text-lg tracking-tight">CodeScaler</span>
+
+            <img src={LOGO_URL} alt="CodeScaler Logo" className="w-20 h-20 object-contain" onError={(e) => {
+              (e.target as HTMLImageElement).style.display = "none";
+            }} />
+            {/* Fallback to text if image fails */}
+            {!LOGO_URL && <span>CS</span>}
+            <span className="font-bold text-2xl tracking-tight text-neutral-800">CodeScaler</span>
           </div>
           <p className="text-neutral-400 text-sm">© 2026 CodeScaler. All rights reserved. Designed for excellence.</p>
           <div className="flex gap-6">
@@ -414,34 +517,167 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Payment Modal */}
+      <AnimatePresence>
+        {isPaymentModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm"
+              onClick={() => setIsPaymentModalOpen(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl shadow-neutral-900/20 overflow-hidden"
+            >
+              <button
+                onClick={() => setIsPaymentModalOpen(false)}
+                className="absolute top-6 right-6 p-2 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded-full transition-all"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="p-8 md:p-10">
+                {!showQRCode ? (
+                  <div className="text-center">
+                    <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <CreditCard size={32} />
+                    </div>
+                    <h2 className="text-2xl font-bold mb-2">Final Step: Secure Payment</h2>
+                    <p className="text-neutral-500 mb-8 max-w-sm mx-auto">
+                      Your application for <b>{formData.domain}</b> is ready. Submit the internship fee to confirm your seat.
+                    </p>
+
+                    <div className="bg-neutral-50 rounded-2xl p-6 mb-8 border border-neutral-100 text-left">
+                      <div className="flex justify-between items-center mb-3 text-sm text-neutral-500">
+                        <span>Internship Duration</span>
+                        <span className="font-bold text-neutral-700">{formData.duration}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-lg font-bold">
+                        <span>Processing Fee</span>
+                        <span className="text-blue-600">₹{price}</span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setShowQRCode(true)}
+                      className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 active:scale-[0.98] flex items-center justify-center gap-3"
+                    >
+                      <QrCode size={24} />
+                      Pay Now
+                    </button>
+                    <p className="mt-6 text-xs text-neutral-400 font-medium">Securely processed via CodeScaler Finance Team</p>
+                  </div>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex flex-col items-center"
+                  >
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-6 border border-green-100">
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-600 animate-pulse" />
+                      Scan to Pay
+                    </div>
+
+                    <div className="bg-white p-6 rounded-[2rem] shadow-2xl border border-neutral-100 mb-8 relative group">
+                      <div className="absolute inset-0 bg-blue-500/5 blur-3xl rounded-full scale-75 group-hover:scale-100 transition-transform duration-700" />
+                      <div className="relative">
+                        <QRCodeSVG
+                          value={`upi://pay?pa=q566002417@ybl&pn=CodeScaler&am=${price}&cu=INR&tn=Payment`}
+                          size={220}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="text-center space-y-6 w-full">
+                      <div>
+                        <p className="font-black text-3xl text-neutral-900">₹{price}</p>
+                        <p className="text-xs font-bold text-neutral-400 uppercase tracking-widest mt-1">Due Amount (GST Incl.)</p>
+                      </div>
+
+                      <div className="p-6 bg-blue-600 rounded-3xl text-white shadow-xl shadow-blue-900/20 text-left relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 blur-2xl rounded-full translate-x-1/2 -translate-y-1/2" />
+                        <p className="text-sm font-black uppercase tracking-widest mb-3 opacity-80 flex items-center gap-2">
+                          <CheckCircle2 size={16} />
+                          Mandatory Step
+                        </p>
+                        <p className="text-sm font-medium leading-relaxed">
+                          After successful payment, please share your <span className="font-black underline underline-offset-4 text-white">Payment Screenshot</span> to this number:
+                        </p>
+                        <a
+                          href="https://wa.me/918572892552"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-4 block py-3 px-4 bg-green-500 hover:bg-green-600 rounded-xl font-black text-center text-lg tracking-tight transition-all"
+                        >
+                          Share Payment Screenshot
+                        </a>
+                        <p className="text-[10px] text-white/60 mt-3 font-bold uppercase tracking-widest text-center italic">WhatsApp Only Support</p>
+                      </div>
+
+                      <div className="flex gap-4">
+                        <button
+                          onClick={() => setShowQRCode(false)}
+                          className="flex-1 py-4 text-sm font-bold text-neutral-400 hover:text-neutral-900 transition-colors"
+                        >
+                          Go Back
+                        </button>
+
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-function Input({ label, value, onChange, placeholder, type = "text", icon }: { 
-  label: string; 
-  value: string; 
+function Input({ label, value, onChange, placeholder, type = "text", icon, error }: {
+  label: string;
+  value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   type?: string;
   icon?: React.ReactNode;
+  error?: string;
 }) {
   return (
     <div className="flex flex-col gap-2 group">
-      <label className="text-sm font-semibold text-neutral-600 transition-colors group-focus-within:text-blue-600">{label}</label>
+      <div className="flex justify-between items-center">
+        <label className={cn(
+          "text-sm font-semibold transition-colors group-focus-within:text-blue-600",
+          error ? "text-red-500" : "text-neutral-600"
+        )}>
+          {label}
+        </label>
+        {error && <span className="text-[10px] font-bold text-red-500 uppercase tracking-tighter">{error}</span>}
+      </div>
       <div className="relative">
         {icon && (
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-blue-500 transition-colors">
+          <div className={cn(
+            "absolute left-4 top-1/2 -translate-y-1/2 transition-colors",
+            error ? "text-red-400" : "text-neutral-400 group-focus-within:text-blue-500"
+          )}>
             {icon}
           </div>
         )}
-        <input 
+        <input
           type={type}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           className={cn(
-            "w-full bg-neutral-50/50 border border-neutral-200 rounded-xl py-3 px-4 outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100",
+            "w-full bg-neutral-50/50 border rounded-xl py-3 px-4 outline-none transition-all focus:bg-white focus:ring-4",
+            error ? "border-red-500 focus:ring-red-100" : "border-neutral-200 focus:border-blue-500 focus:ring-blue-100",
             icon && "pl-11"
           )}
         />
@@ -450,30 +686,44 @@ function Input({ label, value, onChange, placeholder, type = "text", icon }: {
   );
 }
 
-function Select({ label, value, options, onChange, icon }: {
+function Select({ label, value, options, onChange, icon, error }: {
   label: string;
   value: string;
   options: string[];
   onChange: (v: string) => void;
   icon?: React.ReactNode;
+  error?: string;
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-sm font-semibold text-neutral-600">{label}</label>
+      <div className="flex justify-between items-center">
+        <label className={cn(
+          "text-sm font-semibold transition-colors",
+          error ? "text-red-500" : "text-neutral-600"
+        )}>
+          {label}
+        </label>
+        {error && <span className="text-[10px] font-bold text-red-500 uppercase tracking-tighter">{error}</span>}
+      </div>
       <div className="relative">
-         {icon && (
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400">
+        {icon && (
+          <div className={cn(
+            "absolute left-4 top-1/2 -translate-y-1/2 transition-colors",
+            error ? "text-red-400" : "text-neutral-400"
+          )}>
             {icon}
           </div>
         )}
-        <select 
+        <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className={cn(
-            "w-full bg-neutral-50/50 border border-neutral-200 rounded-xl py-3 px-4 outline-none transition-all appearance-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100",
+            "w-full bg-neutral-50/50 border rounded-xl py-3 px-4 outline-none transition-all appearance-none focus:bg-white focus:ring-4",
+            error ? "border-red-500 focus:ring-red-100" : "border-neutral-200 focus:border-blue-500 focus:ring-blue-100",
             icon && "pl-11"
           )}
         >
+          <option value="" disabled>Select {label}</option>
           {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
         </select>
         <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-400">
@@ -495,7 +745,7 @@ function SummaryItem({ label, value }: { label: string; value: string }) {
 
 function ContactView() {
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="max-w-4xl mx-auto"
@@ -505,7 +755,7 @@ function ContactView() {
         <p className="text-neutral-500 max-w-xl mx-auto italic">Have questions about the internship? Reach out to our team directly.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12">
         <div className="space-y-8">
           <div className="group p-8 bg-white rounded-3xl border border-neutral-100 shadow-sm hover:shadow-xl transition-all duration-300">
             <div className="flex items-start gap-6">
@@ -519,8 +769,8 @@ function ContactView() {
                   Shiv Colony, Jind, Haryana 126102
                 </p>
                 <div className="mt-4 flex items-center gap-2 text-blue-600 font-bold text-sm">
-                   <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-                   Get there: 2 mins from city center
+                  <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+                  Get there: 2 mins from city center
                 </div>
               </div>
             </div>
@@ -534,7 +784,7 @@ function ContactView() {
               <div>
                 <h3 className="text-xl font-bold mb-3">Phone Numbers</h3>
                 <div className="space-y-2">
-                  <p className="text-neutral-500 font-bold text-lg hover:text-green-600 transition-colors">095881 61422</p>
+                  <p className="text-neutral-500 font-bold text-lg hover:text-green-600 transition-colors">95881 61422</p>
                   <p className="text-neutral-500 font-bold text-lg hover:text-green-600 transition-colors">7015822199</p>
                 </div>
                 <p className="text-xs text-neutral-400 mt-4 uppercase tracking-widest font-bold">Mon - Sat: 9am to 6pm</p>
@@ -572,7 +822,7 @@ function ContactView() {
 function RoadmapView() {
   const roadmaps = [
     {
-      title: "Data Analyst",
+      title: "Data Analyst Development",
       icon: <Briefcase className="text-blue-500" />,
       topics: [
         { name: "Excel Mastery", detail: "Advanced formulas (VLOOKUP, INDEX-MATCH), Pivot tables and charts, Data cleaning with Power Query, Automating tasks with Macros and basic VBA." },
@@ -584,7 +834,7 @@ function RoadmapView() {
       ]
     },
     {
-      title: "Full Stack Development",
+      title: "Full Stack Web Development",
       icon: <GraduationCap className="text-purple-500" />,
       topics: [
         { name: "Web Fundamentals", detail: "Modern HTML5 (Semantic elements, SEO), CSS3 (Flexbox, CSS Grid, Custom properties), Responsive design with Mobile-First approach, and Web accessibility (ARIA)." },
@@ -597,7 +847,7 @@ function RoadmapView() {
       ]
     },
     {
-      title: "Frontend Development",
+      title: "Frontend Web Development",
       icon: <User className="text-green-500" />,
       topics: [
         { name: "UI Core", detail: "Advanced DOM manipulation, asynchronous JavaScript (Promises, Async/Await), Browser APIs, and building modern interactive web components." },
@@ -607,7 +857,7 @@ function RoadmapView() {
       ]
     },
     {
-      title: "Backend Development",
+      title: "Backend Web Development",
       icon: <Building2 className="text-orange-500" />,
       topics: [
         { name: "Runtime & Framework", detail: "Building scalable servers with Node.js and TypeScript, handling file systems, streams, and child processes, and Express.js advanced routing." },
@@ -625,7 +875,7 @@ function RoadmapView() {
   ];
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="space-y-16"
@@ -657,7 +907,7 @@ function RoadmapView() {
         ))}
       </div>
 
-      <div className="bg-neutral-900 text-white rounded-3xl p-10 md:p-16">
+      <div className="bg-neutral-900 text-white rounded-3xl p-6 md:p-16">
         <div className="flex flex-col md:flex-row gap-12 items-center">
           <div className="md:w-1/2">
             <h3 className="text-2xl font-bold mb-6">Training Instructions</h3>
@@ -679,22 +929,22 @@ function RoadmapView() {
             </div>
           </div>
           <div className="md:w-1/2 grid grid-cols-2 gap-4">
-             <div className="aspect-square bg-white/5 rounded-2xl border border-white/10 flex flex-col items-center justify-center p-6 text-center">
-                <span className="text-3xl font-bold text-blue-400 mb-2">10+</span>
-                <span className="text-xs text-neutral-500">Live Projects</span>
-             </div>
-             <div className="aspect-square bg-white/5 rounded-2xl border border-white/10 flex flex-col items-center justify-center p-6 text-center">
-                <span className="text-3xl font-bold text-purple-400 mb-2">24/7</span>
-                <span className="text-xs text-neutral-500">Mentor Support</span>
-             </div>
-             <div className="aspect-square bg-white/5 rounded-2xl border border-white/10 flex flex-col items-center justify-center p-6 text-center">
-                <span className="text-3xl font-bold text-green-400 mb-2">100%</span>
-                <span className="text-xs text-neutral-500">Practical Work</span>
-             </div>
-             <div className="aspect-square bg-white/5 rounded-2xl border border-white/10 flex flex-col items-center justify-center p-6 text-center">
-                <span className="text-3xl font-bold text-orange-400 mb-2">Daily</span>
-                <span className="text-xs text-neutral-500">Assessments</span>
-             </div>
+            <div className="aspect-square bg-white/5 rounded-2xl border border-white/10 flex flex-col items-center justify-center p-6 text-center">
+              <span className="text-3xl font-bold text-blue-400 mb-2">10+</span>
+              <span className="text-xs text-neutral-500">Live Projects</span>
+            </div>
+            <div className="aspect-square bg-white/5 rounded-2xl border border-white/10 flex flex-col items-center justify-center p-6 text-center">
+              <span className="text-3xl font-bold text-purple-400 mb-2">24/7</span>
+              <span className="text-xs text-neutral-500">Mentor Support</span>
+            </div>
+            <div className="aspect-square bg-white/5 rounded-2xl border border-white/10 flex flex-col items-center justify-center p-6 text-center">
+              <span className="text-3xl font-bold text-green-400 mb-2">100%</span>
+              <span className="text-xs text-neutral-500">Practical Work</span>
+            </div>
+            <div className="aspect-square bg-white/5 rounded-2xl border border-white/10 flex flex-col items-center justify-center p-6 text-center">
+              <span className="text-3xl font-bold text-orange-400 mb-2">Daily</span>
+              <span className="text-xs text-neutral-500">Assessments</span>
+            </div>
           </div>
         </div>
       </div>

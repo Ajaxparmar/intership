@@ -32,3 +32,260 @@ model Application {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
+
+
+
+model Admission {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+
+  // Personal Info
+  fullName        String
+  address         String
+  whatsappNo      String
+  email           String
+  fatherName      String
+  fatherContact   String
+  dob             String
+  gender          String
+  aadharCard      String
+
+  // Academic Info
+  academicClass   String
+  semester        String
+  rollNo          String
+  college         String
+  course          String
+  postCode        String
+
+  // Registration
+  registrationNo  String   @unique
+  collegeCode     String
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // rollNo must be unique per college (same roll number can exist in different colleges)
+  @@index([rollNo, college])
+}
+
+enum FeeStatus {
+  PENDING
+  PARTIAL
+  PAID
+  OVERDUE
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LEAVE
+}
+
+enum OfferLetterStatus {
+  NOT_ISSUED
+  ISSUED
+  ACCEPTED
+}
+
+enum UserRole {
+  ADMIN
+  STUDENT
+  TEAMLEAD
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  fullName        String
+  phone           String   @unique
+  email           String?
+  passwordHash    String
+  role            UserRole
+  student         Student?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([role])
+}
+
+model Student {
+  id              String            @id @default(auto()) @map("_id") @db.ObjectId
+
+  fullName        String
+  phone           String            @unique
+  email           String?
+  address         String?
+  fatherName      String?
+  collegeUniversity String?
+  profileImage    String?
+  passwordHash    String
+  userId          String?           @unique @db.ObjectId
+  user            User?             @relation(fields: [userId], references: [id])
+
+  courseName      String
+  batchId         String?           @db.ObjectId
+  batch           Batch?            @relation(fields: [batchId], references: [id])
+  batchName       String?
+  duration        String?
+  startDate       String?
+  endDate         String?
+
+  totalFee        Float
+  paidFee         Float             @default(0)
+  feeStatus       FeeStatus         @default(PENDING)
+  nextDueDate     String?
+  feeNotes        String?
+  groupId         String?           @db.ObjectId
+  group           StudentGroup?     @relation("GroupMembers", fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  leadGroups      StudentGroup[]    @relation("GroupTeamLead")
+
+  attendance      StudentAttendance[]
+  offerLetters    OfferLetter[]
+  leaveRequests   LeaveRequest[]
+  feeReceipts     FeeReceipt[]
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([courseName])
+  @@index([batchId])
+  @@index([groupId])
+}
+
+model StudentGroup {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  name            String    @unique
+  description     String?
+  teamLeadId      String?   @db.ObjectId
+  teamLead        Student?  @relation("GroupTeamLead", fields: [teamLeadId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  students        Student[] @relation("GroupMembers")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([teamLeadId])
+}
+
+model StudentAttendance {
+  id              String            @id @default(auto()) @map("_id") @db.ObjectId
+  studentId       String            @db.ObjectId
+  student         Student           @relation(fields: [studentId], references: [id])
+  date            String
+  status          AttendanceStatus
+  remarks         String?
+  createdAt       DateTime          @default(now())
+
+  @@unique([studentId, date])
+  @@index([studentId])
+}
+
+model OfferLetter {
+  id              String            @id @default(auto()) @map("_id") @db.ObjectId
+  studentId       String            @db.ObjectId
+  student         Student           @relation(fields: [studentId], references: [id])
+  title           String
+  issueDate       String
+  status          OfferLetterStatus @default(ISSUED)
+  letterUrl       String?
+  notes           String?
+  createdAt       DateTime          @default(now())
+
+  @@index([studentId])
+}
+
+model LeaveRequest {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  studentId       String      @db.ObjectId
+  student         Student     @relation(fields: [studentId], references: [id])
+  fromDate        String
+  toDate          String
+  reason          String
+  status          LeaveStatus @default(PENDING)
+  reviewedAt      DateTime?
+  createdAt       DateTime    @default(now())
+
+  @@index([studentId, status])
+}
+
+model FeeReceipt {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  studentId       String   @db.ObjectId
+  student         Student  @relation(fields: [studentId], references: [id])
+  receiptNo       String   @unique
+  amount          Float
+  paidOn          String
+  paymentMode     String?
+  receiptUrl      String?
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  @@index([studentId])
+}
+
+
+
+enum BatchType {
+  ONLINE
+  OFFLINE
+  HYBRID
+}
+
+enum BatchStatus {
+  UPCOMING
+  ONGOING
+  FULL
+  COMPLETED
+}
+
+model Batch {
+  id           String      @id @default(auto()) @map("_id") @db.ObjectId
+
+  name         String                  // e.g. "Batch A – Morning"
+  course       String                  // e.g. "Full Stack Development"
+  batchType    BatchType               // ONLINE | OFFLINE | HYBRID
+  instructor   String?
+
+  startDate    String                  // stored as "YYYY-MM-DD" string for simplicity
+  endDate      String
+  timingStart  String                  // "09:00"
+  timingEnd    String                  // "11:00"
+  days         String[]                // ["Mon", "Wed", "Fri"]
+
+  totalSeats   Int
+  bookedSeats  Int         @default(0) // incremented on each booking
+
+  status       BatchStatus @default(UPCOMING)
+  description  String?
+
+  bookings     BookedSeat[]
+  students     Student[]
+
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([course, status])
+}
+
+model BookedSeat {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+
+  // Student info — no prior admission required
+  fullName    String
+  whatsappNo  String
+  email       String
+  college     String
+
+  batchId     String   @db.ObjectId
+  batch       Batch    @relation(fields: [batchId], references: [id])
+
+  createdAt   DateTime @default(now())
+
+  // One student (by email) can book only one seat per batch
+  @@unique([email, batchId])
+  @@unique([whatsappNo])
+  @@index([batchId])
+}
