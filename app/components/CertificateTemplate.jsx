@@ -28,12 +28,12 @@ const CSS = `
 
   .certificate-name {
     position: absolute;
-    left: 238px;
+    left: 0;
     top: 362px;
-    width: 650px;
+    width: 100%;
     text-align: center;
     font-family: "Great Vibes", "Segoe Script", cursive;
-    font-size: 54px;
+    font-size: 47px;
     line-height: 1;
     font-style: normal;
     font-weight: 400;
@@ -43,7 +43,7 @@ const CSS = `
   }
 
   .certificate-name.is-long {
-    font-size: 46px;
+    font-size: 40px;
   }
 
   .certificate-ref {
@@ -53,7 +53,7 @@ const CSS = `
     width: 215px;
     text-align: center;
     font-family: "DM Sans", "Segoe UI", Arial, sans-serif;
-    font-size: 16px;
+    font-size: 18px;
     line-height: 1;
     font-weight: 500;
     letter-spacing: 0.2px;
