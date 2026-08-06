@@ -1,6 +1,7 @@
 import React from "react";
 import FeeSlipTemplate from "@/app/components/FeeSlipTemplate";
 import OfferLetterTemplate from "@/app/components/OfferLetterTemplate";
+import CertificateTemplate from "@/app/components/CertificateTemplate";
 
 export type StudentDocumentData = {
   id: string;
@@ -27,8 +28,11 @@ export type ReceiptDocumentData = {
 export type OfferDocumentData = {
   id: string;
   issueDate: string;
+  createdAt: Date;
   student: StudentDocumentData;
 };
+
+export type CertificateDocumentData = StudentDocumentData;
 
 const logoPath = "/android-chrome-192x192.png";
 
@@ -71,6 +75,25 @@ export function offerDocument(offer: OfferDocumentData, refSequence: number) {
       date={offer.issueDate}
       logoPath={logoPath}
       stampPath="/SignandStamp.png"
+    />
+  );
+}
+
+export function offerRefNo(refSequence: number) {
+  return `CS/INT/OFF/2026/${String(refSequence).padStart(3, "0")}`;
+}
+
+export function certificateDocument(student: CertificateDocumentData, refSequence: number) {
+  const course = student.courseName.toLowerCase();
+  const templatePath = course.includes("data")
+    ? "/certificates/da-template-2026.png"
+    : "/certificates/web-template-2026.png";
+
+  return (
+    <CertificateTemplate
+      name={student.fullName}
+      refNo={offerRefNo(refSequence)}
+      templatePath={templatePath}
     />
   );
 }

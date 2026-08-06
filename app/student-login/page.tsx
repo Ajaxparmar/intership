@@ -2,7 +2,7 @@
 
 import React, { FormEvent, useEffect, useState } from "react";
 import Header from "@/app/components/Header";
-import { BookOpen, CalendarCheck, Download, ExternalLink, FileText, IndianRupee, Lock, LogOut, Phone, ReceiptText, User } from "lucide-react";
+import { Award, BookOpen, CalendarCheck, Download, ExternalLink, FileText, IndianRupee, Lock, LogOut, Phone, ReceiptText, User } from "lucide-react";
 
 type Student = {
   id: string;
@@ -126,9 +126,14 @@ export default function StudentLoginPage() {
                   <p className="text-sm text-slate-500">{student.phone} {student.email ? `• ${student.email}` : ""}</p>
                 </div>
               </div>
-              <button onClick={logout} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-red-50 px-5 py-3 font-black text-red-600 transition hover:bg-red-100">
-                <LogOut size={17} /> Logout
-              </button>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <a href={`/api/documents/certificate/${student.id}/download`} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-amber-500 px-5 py-3 font-black text-white transition hover:bg-amber-600">
+                  <Award size={17} /> Download Certificate
+                </a>
+                <button onClick={logout} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-red-50 px-5 py-3 font-black text-red-600 transition hover:bg-red-100">
+                  <LogOut size={17} /> Logout
+                </button>
+              </div>
             </section>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -181,7 +186,7 @@ export default function StudentLoginPage() {
               </section>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               <section className="bg-white rounded-3xl border border-slate-200 p-6">
                 <h2 className="text-xl font-black text-slate-900 flex items-center gap-2 mb-5">
                   <CalendarCheck size={20} className="text-purple-600" /> Attendance
@@ -199,6 +204,17 @@ export default function StudentLoginPage() {
                       <span>{item.status}</span>
                     </div>
                   ))}
+                </div>
+              </section>
+
+              <section className="bg-white rounded-3xl border border-slate-200 p-6">
+                <h2 className="text-xl font-black text-slate-900 flex items-center gap-2 mb-5">
+                  <Award size={20} className="text-amber-600" /> Certificate
+                </h2>
+                <div className="rounded-2xl border border-slate-200 p-4">
+                  <p className="font-black text-slate-900">Internship Certificate</p>
+                  <p className="text-sm text-slate-500">{student.courseName}</p>
+                  <DocumentActions viewUrl={`/documents/certificate/${student.id}`} downloadUrl={`/api/documents/certificate/${student.id}/download`} />
                 </div>
               </section>
 
