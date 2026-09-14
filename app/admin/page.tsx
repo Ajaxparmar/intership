@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { BookOpen, CalendarDays, IndianRupee, LayoutDashboard, RefreshCw, UserRoundCog, Users } from "lucide-react";
+import { Award, BookOpen, CalendarDays, IndianRupee, LayoutDashboard, RefreshCw, UserRoundCog, Users } from "lucide-react";
 
 type Metrics = {
   totalFee: number;
@@ -134,6 +134,10 @@ export default function AdminDashboardPage() {
         <p className="mt-1 text-sm text-blue-100">Continue with the most common administration tasks.</p>
         <div className="mt-5 flex flex-wrap gap-3">
           <Link href="/admin/students/register" className="rounded-xl bg-white px-4 py-2.5 text-sm font-black text-blue-700">Register Student</Link>
+          <Link href="/admin/manual-certificates" className="inline-flex items-center gap-2 rounded-xl bg-blue-500/50 px-4 py-2.5 text-sm font-black text-white ring-1 ring-white/30">
+            <Award size={16} />
+            Manual Certificates
+          </Link>
           <Link href="/admin/batches/add" className="rounded-xl bg-blue-500/50 px-4 py-2.5 text-sm font-black text-white ring-1 ring-white/30">Add Batch</Link>
           <Link href="/admin/students" className="rounded-xl bg-blue-500/50 px-4 py-2.5 text-sm font-black text-white ring-1 ring-white/30">Manage Students</Link>
           <Link href="/admin/groups" className="rounded-xl bg-blue-500/50 px-4 py-2.5 text-sm font-black text-white ring-1 ring-white/30">Manage Groups</Link>

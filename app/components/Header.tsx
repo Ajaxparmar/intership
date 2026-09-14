@@ -20,6 +20,7 @@ type HeaderKey =
   | "admission"
   | "batches"
   | "find"
+  | "verify-certificate"
   | "download"
   | "contact"
   | "bookings"
@@ -73,6 +74,7 @@ export default function Header({
     },
     // { key: "admission", label: "Admission", href: "/admission" },
     { key: "batches", label: "Batches", href: "/batch" },
+    { key: "verify-certificate", label: "Verify Certificate", href: "/verify-certificate" },
     // { key: "find", label: "Find Registration", href: "/find" },
     { key: "role-login", label: "Login", href: "/login" },
     // ...(showDownload

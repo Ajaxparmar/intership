@@ -3,12 +3,13 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, CalendarCheck, GraduationCap, LayoutDashboard, LogOut, PlusCircle, UserRoundCog, Users } from "lucide-react";
+import { Award, BookOpen, CalendarCheck, GraduationCap, LayoutDashboard, LogOut, PlusCircle, UserRoundCog, Users } from "lucide-react";
 
 const links = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/students", label: "Students", icon: Users },
   { href: "/admin/students/register", label: "Register Student", icon: PlusCircle },
+  { href: "/admin/manual-certificates", label: "Manual Certificates", icon: Award },
   { href: "/admin/student-assignments", label: "Student Assignments", icon: UserRoundCog },
   { href: "/admin/groups", label: "Groups & Team Leads", icon: UserRoundCog },
   { href: "/admin/leaves", label: "Leave Requests", icon: CalendarCheck },

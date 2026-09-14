@@ -32,11 +32,10 @@ async function browserLaunchOptions() {
   };
 }
 
-export async function pageToPdf(url: string) {
-  const browser = await puppeteer.launch(await browserLaunchOptions());
+async function renderPdf(browser: Awaited<ReturnType<typeof puppeteer.launch>>, url: string) {
+  const page = await browser.newPage();
 
   try {
-    const page = await browser.newPage();
     await page.goto(url, { waitUntil: "networkidle0" });
     await page.evaluate(async () => {
       await document.fonts.ready;
@@ -55,6 +54,25 @@ export async function pageToPdf(url: string) {
       printBackground: true,
       preferCSSPageSize: true,
     }));
+  } finally {
+    await page.close();
+  }
+}
+
+export async function pageToPdf(url: string) {
+  const [pdf] = await pagesToPdf([url]);
+  return pdf;
+}
+
+export async function pagesToPdf(urls: string[]) {
+  const browser = await puppeteer.launch(await browserLaunchOptions());
+
+  try {
+    const pdfs: Buffer[] = [];
+    for (const url of urls) {
+      pdfs.push(await renderPdf(browser, url));
+    }
+    return pdfs;
   } finally {
     await browser.close();
   }

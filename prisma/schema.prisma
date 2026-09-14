@@ -226,6 +226,22 @@ model FeeReceipt {
   @@index([studentId])
 }
 
+model ManualCertificate {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  studentName     String
+  phone           String
+  certificateNo   String   @unique
+  certificateUrl  String
+  fileName        String?
+  notes           String?
+  issuedAt        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([studentName])
+  @@index([phone])
+}
+
 
 
 enum BatchType {
