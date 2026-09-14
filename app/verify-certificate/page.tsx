@@ -14,6 +14,14 @@ type VerifiedCertificate = {
   createdAt: string;
 };
 
+function formatCertificateNo(value: string) {
+  return value.toUpperCase();
+}
+
+function formatStudentName(value: string) {
+  return value.replace(/\S+/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
+}
+
 export default function VerifyCertificatePage() {
   const [certificateNo, setCertificateNo] = useState("");
   const [name, setName] = useState("");
@@ -62,8 +70,8 @@ export default function VerifyCertificatePage() {
 
           <div className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="space-y-4">
-              <Input icon={<Hash size={18} />} label="Certificate Number" value={certificateNo} onChange={setCertificateNo} onKeyDown={handleKeyDown} />
-              <Input icon={<User size={18} />} label="Student Name" value={name} onChange={setName} onKeyDown={handleKeyDown} />
+              <Input icon={<Hash size={18} />} label="Certificate Number" value={certificateNo} onChange={(value) => setCertificateNo(formatCertificateNo(value))} onKeyDown={handleKeyDown} autoCapitalize="characters" />
+              <Input icon={<User size={18} />} label="Student Name" value={name} onChange={(value) => setName(formatStudentName(value))} onKeyDown={handleKeyDown} autoCapitalize="words" />
 
               <AnimatePresence>
                 {error && (
@@ -143,12 +151,13 @@ export default function VerifyCertificatePage() {
   );
 }
 
-function Input({ label, value, onChange, onKeyDown, icon }: {
+function Input({ label, value, onChange, onKeyDown, icon, autoCapitalize }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   onKeyDown: (event: React.KeyboardEvent) => void;
   icon: React.ReactNode;
+  autoCapitalize?: React.InputHTMLAttributes<HTMLInputElement>["autoCapitalize"];
 }) {
   return (
     <label className="block">
@@ -159,6 +168,7 @@ function Input({ label, value, onChange, onKeyDown, icon }: {
           value={value}
           onChange={(event) => onChange(event.target.value)}
           onKeyDown={onKeyDown}
+          autoCapitalize={autoCapitalize}
           className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 pl-10 text-sm outline-none focus:border-blue-500 focus:bg-white"
         />
       </div>
