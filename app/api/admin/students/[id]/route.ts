@@ -98,6 +98,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       duration: get("duration") || null,
       startDate: batch?.startDate || get("startDate") || null,
       endDate: batch?.endDate || get("endDate") || null,
+      certificateIssueDate: get("certificateIssueDate") || null,
       totalFee,
       paidFee,
       nextDueDate: nextDueDate || null,

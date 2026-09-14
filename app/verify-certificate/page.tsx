@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { AlertCircle, Award, CheckCircle2, Download, Hash, Search, User } from "lucide-react";
+import { AlertCircle, Award, CheckCircle2, Hash, Search, User } from "lucide-react";
 import Header from "@/app/components/Header";
 
 type VerifiedCertificate = {
@@ -20,6 +20,10 @@ function formatCertificateNo(value: string) {
 
 function formatStudentName(value: string) {
   return value.replace(/\S+/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
+}
+
+function isImageCertificate(url: string) {
+  return /\.(png|jpe?g|webp|gif)$/i.test(url);
 }
 
 export default function VerifyCertificatePage() {
@@ -116,22 +120,15 @@ export default function VerifyCertificatePage() {
                 <div className="mt-7 grid gap-3 sm:grid-cols-2">
                   <Info label="Certificate Number" value={certificate.certificateNo} />
                   <Info label="Phone Number" value={certificate.phone} />
-                  <Info label="Issue Date" value={certificate.issuedAt || "Not specified"} />
-                  <Info label="Uploaded On" value={new Date(certificate.createdAt).toLocaleDateString("en-IN")} />
                 </div>
 
                 <div className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-slate-50">
-                  {certificate.certificateUrl.toLowerCase().endsWith(".pdf") ? (
-                    <iframe src={certificate.certificateUrl} title="Verified certificate" className="h-[520px] w-full" />
-                  ) : (
+                  {isImageCertificate(certificate.certificateUrl) ? (
                     <img src={certificate.certificateUrl} alt={`${certificate.studentName} certificate`} className="max-h-[620px] w-full object-contain" />
+                  ) : (
+                    <iframe src={certificate.certificateUrl} title="Verified certificate" className="aspect-[1123/794] w-full" />
                   )}
                 </div>
-
-                <a href={certificate.certificateUrl} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-black text-white hover:bg-slate-800">
-                  <Download size={18} />
-                  Open Certificate
-                </a>
               </motion.div>
             ) : (
               <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex min-h-[480px] flex-col items-center justify-center text-center">

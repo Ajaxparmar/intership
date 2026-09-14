@@ -134,6 +134,7 @@ model Student {
   duration        String?
   startDate       String?
   endDate         String?
+  certificateIssueDate String?
 
   totalFee        Float
   paidFee         Float             @default(0)

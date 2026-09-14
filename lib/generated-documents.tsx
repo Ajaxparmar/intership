@@ -14,6 +14,7 @@ export type StudentDocumentData = {
   batchName: string | null;
   duration: string | null;
   startDate: string | null;
+  certificateIssueDate?: string | null;
 };
 
 export type ReceiptDocumentData = {
@@ -93,9 +94,23 @@ export function certificateDocument(student: CertificateDocumentData, refSequenc
     <CertificateTemplate
       name={student.fullName}
       refNo={offerRefNo(refSequence)}
+      issueDate={formatCertificateIssueDate(student.certificateIssueDate)}
       templatePath={templatePath}
     />
   );
+}
+
+function formatCertificateIssueDate(value?: string | null) {
+  if (!value) return "";
+
+  const [year, month, day] = value.split("-").map(Number);
+  if (!year || !month || !day) return value;
+
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(Date.UTC(year, month - 1, day)));
 }
 
 function escapeHtml(value: string | number | null) {

@@ -25,6 +25,7 @@ type Student = {
   duration?: string;
   startDate?: string;
   endDate?: string;
+  certificateIssueDate?: string;
   totalFee: number;
   paidFee: number;
   feeStatus: string;
@@ -56,6 +57,7 @@ const initialEditForm = {
   duration: "",
   startDate: "",
   endDate: "",
+  certificateIssueDate: "",
   totalFee: "",
   paidFee: "",
   nextDueDate: "",
@@ -185,6 +187,7 @@ export default function StudentsTablePage() {
       duration: student.duration || "",
       startDate: student.startDate || "",
       endDate: student.endDate || "",
+      certificateIssueDate: student.certificateIssueDate || "",
       totalFee: student.totalFee.toString(),
       paidFee: student.paidFee.toString(),
       nextDueDate: student.nextDueDate || "",
@@ -507,6 +510,7 @@ export default function StudentsTablePage() {
                   <EditInput label="Duration" value={editForm.duration} onChange={(value) => setEditForm({ ...editForm, duration: value })} />
                   <EditInput label="Start Date" type="date" value={editForm.startDate} onChange={(value) => setEditForm({ ...editForm, startDate: value })} />
                   <EditInput label="End Date" type="date" value={editForm.endDate} onChange={(value) => setEditForm({ ...editForm, endDate: value })} />
+                  <EditInput label="Certificate Issue Date" type="date" value={editForm.certificateIssueDate} onChange={(value) => setEditForm({ ...editForm, certificateIssueDate: value })} />
                 </div>
               </section>
 

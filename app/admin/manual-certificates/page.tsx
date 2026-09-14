@@ -2,7 +2,7 @@
 
 import React, { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
-import { Award, CalendarDays, CheckCircle2, FileUp, Hash, Phone, RefreshCw, SearchCheck, User } from "lucide-react";
+import { AlertTriangle, Award, CalendarDays, CheckCircle2, FileUp, Hash, Pencil, Phone, RefreshCw, SearchCheck, Trash2, User, X } from "lucide-react";
 
 type ManualCertificate = {
   id: string;
@@ -32,6 +32,14 @@ export default function ManualCertificatesPage() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [success, setSuccess] = useState("");
+  const [editingCertificate, setEditingCertificate] = useState<ManualCertificate | null>(null);
+  const [editForm, setEditForm] = useState(initialForm);
+  const [editFile, setEditFile] = useState<File | null>(null);
+  const [editMessage, setEditMessage] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [deletingCertificate, setDeletingCertificate] = useState<ManualCertificate | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteMessage, setDeleteMessage] = useState("");
 
   const loadCertificates = async () => {
     setLoading(true);
@@ -78,6 +86,63 @@ export default function ManualCertificatesPage() {
       setMessage(error instanceof Error ? error.message : "Could not upload certificate.");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const openEdit = (certificate: ManualCertificate) => {
+    setEditingCertificate(certificate);
+    setEditForm({
+      studentName: certificate.studentName || "",
+      phone: certificate.phone || "",
+      certificateNo: certificate.certificateNo || "",
+      issuedAt: certificate.issuedAt || "",
+      notes: certificate.notes || "",
+    });
+    setEditFile(null);
+    setEditMessage("");
+  };
+
+  const saveCertificate = async () => {
+    if (!editingCertificate) return;
+    setSaving(true);
+    setEditMessage("");
+
+    try {
+      const body = new FormData();
+      Object.entries(editForm).forEach(([key, value]) => body.append(key, value));
+      if (editFile) body.append("certificateFile", editFile);
+
+      const response = await fetch(`/api/admin/manual-certificates/${editingCertificate.id}`, { method: "PATCH", body });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not update certificate.");
+
+      setEditingCertificate(null);
+      setSuccess(`Certificate ${data.certificate.certificateNo} updated.`);
+      await loadCertificates();
+    } catch (error) {
+      setEditMessage(error instanceof Error ? error.message : "Could not update certificate.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteCertificate = async () => {
+    if (!deletingCertificate) return;
+    setDeleting(true);
+    setDeleteMessage("");
+
+    try {
+      const response = await fetch(`/api/admin/manual-certificates/${deletingCertificate.id}`, { method: "DELETE" });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not delete certificate.");
+
+      setDeletingCertificate(null);
+      setSuccess(`Certificate ${data.deletedCertificate} deleted.`);
+      await loadCertificates();
+    } catch (error) {
+      setDeleteMessage(error instanceof Error ? error.message : "Could not delete certificate.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -160,7 +225,7 @@ export default function ManualCertificatesPage() {
                   <th className="px-5 py-3">Certificate No</th>
                   <th className="px-5 py-3">Phone</th>
                   <th className="px-5 py-3">Uploaded</th>
-                  <th className="px-5 py-3 text-right">File</th>
+                  <th className="px-5 py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -173,10 +238,18 @@ export default function ManualCertificatesPage() {
                     <td className="px-5 py-4 font-black text-blue-700">{certificate.certificateNo}</td>
                     <td className="px-5 py-4 font-semibold text-slate-600">{certificate.phone}</td>
                     <td className="px-5 py-4 font-semibold text-slate-500">{new Date(certificate.createdAt).toLocaleDateString("en-IN")}</td>
-                    <td className="px-5 py-4 text-right">
+                    <td className="px-5 py-4">
+                      <div className="flex justify-end gap-2">
                       <a href={certificate.certificateUrl} target="_blank" rel="noopener noreferrer" className="inline-flex rounded-xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-700 hover:bg-slate-200">
                         View
                       </a>
+                      <button onClick={() => openEdit(certificate)} className="inline-flex items-center gap-1 rounded-xl bg-blue-600 px-3 py-2 text-xs font-black text-white hover:bg-blue-700">
+                        <Pencil size={13} /> Edit
+                      </button>
+                      <button onClick={() => { setDeletingCertificate(certificate); setDeleteMessage(""); }} className="inline-flex items-center gap-1 rounded-xl bg-red-50 px-3 py-2 text-xs font-black text-red-600 hover:bg-red-100">
+                        <Trash2 size={13} /> Delete
+                      </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -190,6 +263,74 @@ export default function ManualCertificatesPage() {
           </div>
         </section>
       </div>
+
+      {editingCertificate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4">
+          <section className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
+            <div className="mb-6 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-black uppercase tracking-wider text-blue-600">Edit Certificate</p>
+                <h2 className="text-2xl font-black text-slate-900">{editingCertificate.studentName}</h2>
+              </div>
+              <button onClick={() => setEditingCertificate(null)} className="rounded-xl bg-slate-100 p-2 text-slate-500 hover:bg-slate-200">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <Input icon={<User size={16} />} label="Student Name" value={editForm.studentName} onChange={(value) => setEditForm({ ...editForm, studentName: value })} required />
+              <Input icon={<Phone size={16} />} label="Phone Number" type="tel" value={editForm.phone} onChange={(value) => setEditForm({ ...editForm, phone: value })} required />
+              <Input icon={<Hash size={16} />} label="Certificate Number" value={editForm.certificateNo} onChange={(value) => setEditForm({ ...editForm, certificateNo: value })} required />
+              <Input icon={<CalendarDays size={16} />} label="Issue Date" type="date" value={editForm.issuedAt} onChange={(value) => setEditForm({ ...editForm, issuedAt: value })} />
+
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-black uppercase tracking-wide text-slate-500">Replace Certificate File</span>
+                <div className="flex items-center gap-4 rounded-2xl border border-dashed border-slate-300 p-4">
+                  <FileUp size={22} className="shrink-0 text-blue-600" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-black text-slate-800">{editFile ? editFile.name : editingCertificate.fileName || "Keep existing file"}</p>
+                    <p className="text-xs font-semibold text-slate-500">Leave empty to keep current file.</p>
+                  </div>
+                  <input type="file" accept="application/pdf,image/*" onChange={(event) => setEditFile(event.target.files?.[0] ?? null)} className="w-full max-w-[130px] text-xs" />
+                </div>
+              </label>
+
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-black uppercase tracking-wide text-slate-500">Notes</span>
+                <textarea value={editForm.notes} onChange={(event) => setEditForm({ ...editForm, notes: event.target.value })} rows={3} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm outline-none focus:border-blue-500 focus:bg-white" />
+              </label>
+
+              {editMessage && <p className="rounded-xl bg-red-50 p-3 text-sm font-bold text-red-700">{editMessage}</p>}
+              <button disabled={saving} onClick={saveCertificate} className="w-full rounded-2xl bg-blue-600 py-3 font-black text-white hover:bg-blue-700 disabled:opacity-60">
+                {saving ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {deletingCertificate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm">
+          <section className="w-full max-w-md rounded-3xl bg-white p-7 text-center shadow-2xl">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-red-600">
+              <AlertTriangle size={30} />
+            </div>
+            <h2 className="mt-5 text-2xl font-black text-slate-900">Delete certificate?</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              This will remove <strong className="text-slate-800">{deletingCertificate.certificateNo}</strong> for {deletingCertificate.studentName}.
+            </p>
+            {deleteMessage && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm font-bold text-red-700">{deleteMessage}</p>}
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <button disabled={deleting} onClick={() => setDeletingCertificate(null)} className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-black text-slate-600 hover:bg-slate-50 disabled:opacity-50">
+                Cancel
+              </button>
+              <button disabled={deleting} onClick={deleteCertificate} className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-3 text-sm font-black text-white hover:bg-red-700 disabled:opacity-50">
+                <Trash2 size={15} /> {deleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

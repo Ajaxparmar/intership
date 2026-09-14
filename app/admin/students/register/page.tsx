@@ -2,7 +2,7 @@
 
 import React, { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, BookOpen, Building2, CheckCircle2, FileText, IndianRupee, Mail, Phone, User, Upload, X } from "lucide-react";
+import { ArrowLeft, BookOpen, Building2, CalendarDays, CheckCircle2, FileText, IndianRupee, Mail, Phone, User, Upload, X } from "lucide-react";
 
 type Batch = {
   id: string;
@@ -27,6 +27,7 @@ const initialForm = {
   collegeUniversity: "",
   batchId: "",
   duration: "",
+  certificateIssueDate: "",
   totalFee: "",
   paidFee: "",
   paymentMode: "UPI",
@@ -173,6 +174,9 @@ export default function RegisterStudentPage() {
 
             <div className="mt-4">
               <Input label="Duration" value={form.duration} onChange={(value) => update("duration", value)} placeholder="45 days" />
+            </div>
+            <div className="mt-4">
+              <Input icon={<CalendarDays size={16} />} label="Certificate Issue Date" type="date" value={form.certificateIssueDate} onChange={(value) => update("certificateIssueDate", value)} />
             </div>
           </section>
 
